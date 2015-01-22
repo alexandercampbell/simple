@@ -1,0 +1,8 @@
+[package]
+
+name = "november-squad"
+version = "0.0.1"
+authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
+
+[dependencies]
+sdl2 = "0.0.18"
