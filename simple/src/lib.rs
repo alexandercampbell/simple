@@ -3,16 +3,16 @@
 
 extern crate sdl2;
 
-pub struct Engine {
+pub struct Window {
     //window:     sdl2::video::Window,
     renderer:   sdl2::render::Renderer,
 }
 
-impl Engine {
-    pub fn new(name: &str, width: isize, height: isize) -> Engine {
+impl Window {
+    pub fn new(name: &str, width: isize, height: isize) -> Window {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
-        let window = sdl2::video::Window::new(
+        let sdl_window = sdl2::video::Window::new(
             name,
             sdl2::video::WindowPos::PosCentered,
             sdl2::video::WindowPos::PosCentered,
@@ -21,12 +21,12 @@ impl Engine {
         ).unwrap();
 
         let renderer = sdl2::render::Renderer::from_window(
-            window,
+            sdl_window,
             sdl2::render::RenderDriverIndex::Auto,
             sdl2::render::ACCELERATED,
         ).unwrap();
 
-        Engine{renderer: renderer}
+        Window{renderer: renderer}
     }
 
     pub fn run(&self) {

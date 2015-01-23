@@ -3,11 +3,11 @@
 
 extern crate simple;
 
-use simple::Engine;
+use simple::Window;
 
 fn main() {
-    let e = Engine::new("November", 1920, 1080);
-    e.run();
-    e.quit();
+    let w = Window::new("November", 1920, 1080);
+    w.run();
+    w.quit();
 }
 
