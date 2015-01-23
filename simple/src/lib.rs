@@ -2,7 +2,6 @@
 #![allow(unused)]
 
 extern crate sdl2;
-extern crate gl;
 
 pub struct Engine {
     //window:     sdl2::video::Window,
@@ -13,16 +12,12 @@ impl Engine {
     pub fn new(width: isize, height: isize) -> Engine {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
-        gl::load_with(|s| unsafe {
-            std::mem::transmute(sdl2::video::gl_get_proc_address(s))
-        });
-
         let window = sdl2::video::Window::new(
             "November Squad",
             sdl2::video::WindowPos::PosCentered,
             sdl2::video::WindowPos::PosCentered,
             width, height,
-            sdl2::video::OPENGL,
+            sdl2::video::BORDERLESS | sdl2::video::RESIZABLE,
         ).unwrap();
 
         let renderer = sdl2::render::Renderer::from_window(

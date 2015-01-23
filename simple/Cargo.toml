@@ -5,6 +5,3 @@ authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
 
 [dependencies]
 sdl2 = "0.0.18"
-
-[dependencies.gl]
-git = "https://github.com/bjz/gl-rs"
