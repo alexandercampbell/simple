@@ -1,13 +1,8 @@
+#![allow(unstable)]
+#![allow(unused)]
+
 extern crate sdl2;
 extern crate gl;
-use std;
-
-pub enum Event {
-    Update,
-    Draw,
-    KeyPressed,
-    KeyReleased,
-}
 
 pub struct Engine {
     //window:     sdl2::video::Window,

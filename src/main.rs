@@ -1,8 +1,9 @@
 #![allow(unstable)]
 #![allow(unused)]
 
-use engine::Engine;
-mod engine;
+extern crate simple;
+
+use simple::Engine;
 
 fn main() {
     let e = Engine::new(1920, 1080);
