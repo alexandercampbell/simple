@@ -9,11 +9,11 @@ pub struct Engine {
 }
 
 impl Engine {
-    pub fn new(width: isize, height: isize) -> Engine {
+    pub fn new(name: &str, width: isize, height: isize) -> Engine {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
         let window = sdl2::video::Window::new(
-            "November Squad",
+            name,
             sdl2::video::WindowPos::PosCentered,
             sdl2::video::WindowPos::PosCentered,
             width, height,
