@@ -4,29 +4,25 @@
 extern crate sdl2;
 
 pub struct Window {
-    //window:     sdl2::video::Window,
     renderer:   sdl2::render::Renderer,
 }
 
 impl Window {
-    pub fn new(name: &str, width: isize, height: isize) -> Window {
+    pub fn new(name: &str, width: isize, height: isize) -> Result<Window> {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
-        let sdl_window = sdl2::video::Window::new(
-            name,
-            sdl2::video::WindowPos::PosCentered,
-            sdl2::video::WindowPos::PosCentered,
-            width, height,
-            sdl2::video::BORDERLESS | sdl2::video::RESIZABLE,
-        ).unwrap();
+        let sdl_window = try!(sdl2::video::Window::new(name,
+            WindowPos::PosCentered, WindowPos::PosCentered,
+            width, height, video::BORDERLESS | video::RESIZABLE,
+        ).unwrap());
 
-        let renderer = sdl2::render::Renderer::from_window(
+        let renderer = try!(sdl2::render::Renderer::from_window(
             sdl_window,
             sdl2::render::RenderDriverIndex::Auto,
             sdl2::render::ACCELERATED,
-        ).unwrap();
+        ).unwrap());
 
-        Window{renderer: renderer}
+        Ok(Window{renderer: renderer})
     }
 
     pub fn run(&self) {
