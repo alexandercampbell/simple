@@ -1,28 +1,34 @@
 #![allow(unstable)]
-#![allow(unused)]
 
 extern crate sdl2;
+use sdl2::video::WindowPos;
+use sdl2::video;
 
+// Re-export some of the symbols in event.rs
+pub use event::{KeyCode,MouseButton,Event};
+mod event;
+
+/// Windows can display graphics, play sounds, and return events.
 pub struct Window {
     renderer:   sdl2::render::Renderer,
 }
 
 impl Window {
-    pub fn new(name: &str, width: isize, height: isize) -> Result<Window> {
+    pub fn new(name: &str, width: isize, height: isize) -> Window {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
-        let sdl_window = try!(sdl2::video::Window::new(name,
+        let sdl_window = sdl2::video::Window::new(name,
             WindowPos::PosCentered, WindowPos::PosCentered,
             width, height, video::BORDERLESS | video::RESIZABLE,
-        ).unwrap());
+        ).unwrap();
 
-        let renderer = try!(sdl2::render::Renderer::from_window(
+        let renderer = sdl2::render::Renderer::from_window(
             sdl_window,
             sdl2::render::RenderDriverIndex::Auto,
             sdl2::render::ACCELERATED,
-        ).unwrap());
+        ).unwrap();
 
-        Ok(Window{renderer: renderer})
+        Window{renderer: renderer}
     }
 
     pub fn run(&self) {
