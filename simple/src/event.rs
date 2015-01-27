@@ -1,6 +1,6 @@
+
 extern crate sdl2;
 use sdl2::event::Event as SDL_Event;
-
 pub use sdl2::keycode::KeyCode;
 pub use sdl2::mouse::Mouse as MouseButton;
 
