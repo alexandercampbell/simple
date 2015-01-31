@@ -1,7 +1,18 @@
+
 [package]
-name = "simple"
-version = "0.0.1"
-authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
+	name = "simple"
+	version = "0.0.1"
+	authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
+	repository = "https://github.com/alexandercampbell/simple"
+	description = "The simplest graphics library for Rust"
+	keywords = ["simple","graphics","2D"]
+	license = "Zlib"
+
+[lib]
+	name = "simple"
+	crate-type = ["static"]
 
 [dependencies]
-sdl2 = "0.0.18"
+	# Surprise. It's actually an SDL2 wrapper.
+	sdl2 = "0.0.18"
+
