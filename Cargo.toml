@@ -15,4 +15,5 @@
 [dependencies]
 	# Surprise. It's actually an SDL2 wrapper.
 	sdl2 = "*"
+	sdl2-sys = "*"
 
