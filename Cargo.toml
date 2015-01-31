@@ -14,5 +14,5 @@
 
 [dependencies]
 	# Surprise. It's actually an SDL2 wrapper.
-	sdl2 = "0.0.18"
+	sdl2 = "*"
 

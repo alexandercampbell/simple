@@ -3,11 +3,8 @@ extern crate sdl2;
 use sdl2::video::WindowPos;
 use sdl2::video;
 
-/// handle_error is a helper that (for now) just prints out the message that you choose to the
-/// screen.
-fn handle_error(msg: String) {
-    println!("SDL2 Error detected: {}", msg);
-}
+use event;
+use event::Event;
 
 /// Windows can display graphics, play sounds, and return events.
 pub struct Window {
@@ -15,7 +12,7 @@ pub struct Window {
 }
 
 impl Window {
-    pub fn new(name: &str, width: isize, height: isize) -> Window {
+    pub fn new(name: &str, width: i32, height: i32) -> Window {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
         let sdl_window = video::Window::new(name,
@@ -34,10 +31,7 @@ impl Window {
 
     pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
         let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
-        match self.renderer.set_draw_color(color_struct) {
-            Ok(_) => (),
-            Err(s) => handle_error(s),
-        }
+        self.renderer.drawer().set_draw_color(color_struct);
     }
 
     pub fn run(&self) {
@@ -45,18 +39,15 @@ impl Window {
             sdl2::timer::delay(10);
 
             // Handle events
-            match sdl2::event::poll_event() {
-                sdl2::event::Event::Quit(_) => break,
-                sdl2::event::Event::KeyDown(_, _, key, _, _, _) => {
-                    if key == sdl2::keycode::KeyCode::Escape {
-                        break;
-                    }
-                },
+            let event = Event::from_sdl2_event(sdl2::event::poll_event());
+            match event {
+                Some(Event::Quit) => break,
+                Some(Event::Keyboard{key: event::KeyCode::Escape, ..}) => break,
                 _ => (),
             };
 
-            let _ = self.renderer.clear();
-            self.renderer.present();
+            self.renderer.drawer().clear();
+            self.renderer.drawer().present();
         }
     }
 

@@ -1,5 +1,3 @@
-#![allow(unstable)]
-
 extern crate sdl2;
 
 // Re-export some of the symbols in event.rs

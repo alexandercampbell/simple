@@ -1,4 +1,3 @@
-#![allow(unstable)]
 #![allow(unused)]
 
 extern crate simple;

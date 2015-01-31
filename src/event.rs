@@ -6,10 +6,8 @@ pub use sdl2::mouse::Mouse as MouseButton;
 
 #[derive(Copy,PartialEq)]
 pub enum Event {
-    /// The boolean at the beginning of Event::Keyboard is true iff the key is down.
-    Keyboard(bool, KeyCode),
-    /// The boolean at the beginning of Event::Mouse is true iff the key is down.
-    Mouse(bool, MouseButton, i32, i32),
+    Keyboard{is_down: bool, key: KeyCode},
+    Mouse{is_down: bool, button: MouseButton, x: i32, y: i32},
     Quit,
 }
 
@@ -17,17 +15,15 @@ impl Event {
     pub fn from_sdl2_event(e: SDL_Event) -> Option<Event> {
         match e {
             // Quit
-            SDL_Event::Quit(_) => Some(Event::Quit),
+            SDL_Event::Quit{..} => Some(Event::Quit),
 
             // Keyboard
-            SDL_Event::KeyDown(_, _, key, _, _, _)  => Some(Event::Keyboard(true, key)),
-            SDL_Event::KeyUp(_, _, key, _, _, _)    => Some(Event::Keyboard(false, key)),
+            SDL_Event::KeyDown{keycode: key, ..}  => Some(Event::Keyboard{is_down: true, key: key}),
+            SDL_Event::KeyUp{keycode: key, ..}    => Some(Event::Keyboard{is_down: false, key: key}),
 
             // Mouse
-            SDL_Event::MouseButtonDown(_, _, _, button, x, y) =>
-                Some(Event::Mouse(true, button, x, y)),
-            SDL_Event::MouseButtonUp(_, _, _, button, x, y) =>
-                Some(Event::Mouse(false, button, x, y)),
+            SDL_Event::MouseButtonDown{mouse_btn: button, x, y, ..}  => Some(Event::Mouse{is_down: true, button: button, x: x, y: y}),
+            SDL_Event::MouseButtonUp{mouse_btn: button, x, y, ..}    => Some(Event::Mouse{is_down: false, button: button, x: x, y: y}),
 
             _ => None,
         }
@@ -40,7 +36,7 @@ fn test_from_sdl2_event() {
         assert!(Event::from_sdl2_event(input).unwrap() == expected);
     }
 
-    test(SDL_Event::Quit(0), Event::Quit);
+    test(SDL_Event::Quit{timestamp: 0}, Event::Quit);
 
     // NOTE: can't test more comprehensively because SDL_Events have embedded sdl::video::Window
     // instances and I can't think of a way to get a window instance for a simple test.
