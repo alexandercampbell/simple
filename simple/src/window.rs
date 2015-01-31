@@ -42,6 +42,8 @@ impl Window {
 
     pub fn run(&self) {
         loop {
+            sdl2::timer::delay(10);
+
             // Handle events
             match sdl2::event::poll_event() {
                 sdl2::event::Event::Quit(_) => break,
@@ -52,6 +54,9 @@ impl Window {
                 },
                 _ => (),
             };
+
+            let _ = self.renderer.clear();
+            self.renderer.present();
         }
     }
 
