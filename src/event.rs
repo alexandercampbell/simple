@@ -7,7 +7,7 @@ pub use sdl2::mouse::Mouse as MouseButton;
 #[derive(Copy,PartialEq)]
 pub enum Event {
     Keyboard{is_down: bool, key: KeyCode},
-    Mouse{is_down: bool, button: MouseButton, x: i32, y: i32},
+    Mouse{is_down: bool, button: MouseButton, mouse_x: i32, mouse_y: i32},
     Quit,
 }
 
@@ -22,8 +22,10 @@ impl Event {
             SDL_Event::KeyUp{keycode: key, ..}    => Some(Event::Keyboard{is_down: false, key: key}),
 
             // Mouse
-            SDL_Event::MouseButtonDown{mouse_btn: button, x, y, ..}  => Some(Event::Mouse{is_down: true, button: button, x: x, y: y}),
-            SDL_Event::MouseButtonUp{mouse_btn: button, x, y, ..}    => Some(Event::Mouse{is_down: false, button: button, x: x, y: y}),
+            SDL_Event::MouseButtonDown{mouse_btn: button, x, y, ..} =>
+                Some(Event::Mouse{is_down: true, button: button, mouse_x: x, mouse_y: y}),
+            SDL_Event::MouseButtonUp{mouse_btn: button, x, y, ..} =>
+                Some(Event::Mouse{is_down: false, button: button, mouse_x: x, mouse_y: y}),
 
             _ => None,
         }
