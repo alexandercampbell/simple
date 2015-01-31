@@ -5,6 +5,7 @@ use sdl2::video;
 
 use event;
 use event::Event;
+use shape;
 
 /// Windows can display graphics, play sounds, and return events.
 pub struct Window {
@@ -53,6 +54,18 @@ impl Window {
 
     pub fn quit(&self) {
         sdl2::quit();
+    }
+}
+
+// Drawing routines. These are mostly aliases onto renderer.drawer()
+#[unstable]
+impl Window {
+    pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(&rect) }
+    pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(&rect) }
+    pub fn draw_point(&self, point: shape::Point)   { self.renderer.drawer().draw_point(point) }
+
+    pub fn draw_polygon(&self, polygon: shape::Polygon) {
+        self.renderer.drawer().draw_points(&polygon.points[])
     }
 }
 
