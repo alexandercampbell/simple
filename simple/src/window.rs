@@ -3,6 +3,12 @@ extern crate sdl2;
 use sdl2::video::WindowPos;
 use sdl2::video;
 
+/// handle_error is a helper that (for now) just prints out the message that you choose to the
+/// screen.
+fn handle_error(msg: String) {
+    println!("SDL2 Error detected: {}", msg);
+}
+
 /// Windows can display graphics, play sounds, and return events.
 pub struct Window {
     renderer:   sdl2::render::Renderer,
@@ -24,6 +30,14 @@ impl Window {
         ).unwrap();
 
         Window{renderer: renderer}
+    }
+
+    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
+        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
+        match self.renderer.set_draw_color(color_struct) {
+            Ok(_) => (),
+            Err(s) => handle_error(s),
+        }
     }
 
     pub fn run(&self) {
