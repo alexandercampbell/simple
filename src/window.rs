@@ -7,7 +7,11 @@ use sdl2::video::{self,WindowPos};
 use event::{self,Event};
 use shape;
 
-/// Windows can display graphics, play sounds, and return events.
+///
+/// A Window can display graphics, play sounds, and handle events.
+///
+/// Creating multiple Windows is untested!
+///
 pub struct Window {
     renderer:           sdl2::render::Renderer,
     running:            bool,
@@ -15,8 +19,10 @@ pub struct Window {
     ticks_per_frame:    u32,
 }
 
-/// Top-level running / creation methods.
+/// Top-level Running / Creation Methods
+/// ------------------------------------
 impl Window {
+    /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
@@ -31,15 +37,19 @@ impl Window {
             sdl2::render::ACCELERATED,
         ).unwrap();
 
-        Window{
+        let window = Window{
             renderer:           renderer,
             running:            true,
             event_queue:        vec![],
             ticks_per_frame:    (60.0 / 1000.0) as u32,
-        }
+        };
+        window.clear();
+        window
     }
 
-    /// Do most of the heavy lifting in redrawing and updating the display.
+    /// Redrawing and update the display, while maintaining a consistent framerate and updating the
+    /// event queue. You should draw your objects immediately before you call this function. NOTE:
+    /// This function returns false if the program should terminate.
     pub fn next_frame(&mut self) -> bool {
         if !self.running {
             return false;
@@ -64,22 +74,38 @@ impl Window {
             None => (),
         };
 
-        self.set_color(0, 0, 0, 255);
-        self.renderer.drawer().clear();
-
         true
     }
 
+    /// Clear the screen to black. This will set the Window's draw color to 0,0,0,255.
+    pub fn clear(&self) {
+        self.set_color(0, 0, 0, 255);
+        self.renderer.drawer().clear();
+    }
+
+    /// Return true when there is an event waiting in the queue for processing.
     pub fn has_event(&self) -> bool { self.event_queue.len() > 0 }
+
+    /// Get the next event from the queue. NOTE: If the event queue on the Window is empty, this
+    /// function will panic. Call `has_event()` to find out if there is an event ready for
+    /// processing.
+    ///
+    /// Note that events are handled in a first-in-first-out order. If a user presses three keys 1,
+    /// 2, 3 during a frame, then the next three calls to next_event will return 1, 2, 3 in the
+    /// same order.
     pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
 
+    /// This does not actually cause the program to exit. It just means that next_frame will return
+    /// false on the next call.
     pub fn quit(&mut self) {
         self.running = false;
     }
 }
 
-/// Drawing routines. These are mostly aliases onto renderer.drawer()
+/// Drawing Methods
+/// ---------------
 impl Window {
+    // These functions are just aliases onto self.renderer.drawer() as you can see.
     pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(&rect) }
     pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(&rect) }
     pub fn draw_point(&self, point: shape::Point)   { self.renderer.drawer().draw_point(point) }
@@ -99,7 +125,7 @@ impl Window {
 
 // Dtor for Window.
 impl std::ops::Drop for Window {
-    /// close the window
+    /// Close the window and clean up resources.
     fn drop(&mut self) {
         sdl2::quit();
     }
