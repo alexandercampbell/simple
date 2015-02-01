@@ -4,6 +4,7 @@ use sdl2::event::Event as SDL_Event;
 pub use sdl2::keycode::KeyCode;
 pub use sdl2::mouse::Mouse as MouseButton;
 
+/// Event is an enumeration of the effects that a user can have on a running Window.
 #[derive(Copy,PartialEq)]
 pub enum Event {
     Keyboard{is_down: bool, key: KeyCode},

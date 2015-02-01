@@ -9,14 +9,14 @@ use shape;
 
 /// Windows can display graphics, play sounds, and return events.
 pub struct Window {
-    renderer:       sdl2::render::Renderer,
-    running:        bool,
-    event_queue:    std::vec::Vec<Event>,
+    renderer:           sdl2::render::Renderer,
+    running:            bool,
+    event_queue:        std::vec::Vec<Event>,
+    ticks_per_frame:    u32,
 }
 
 impl Window {
     pub fn new(name: &str, width: i32, height: i32) -> Window {
-
         sdl2::init(sdl2::INIT_EVERYTHING);
 
         let sdl_window = video::Window::new(
@@ -31,9 +31,10 @@ impl Window {
         ).unwrap();
 
         Window{
-            renderer:       renderer,
-            running:        true,
-            event_queue:    vec![],
+            renderer:           renderer,
+            running:            true,
+            event_queue:        vec![],
+            ticks_per_frame:    (60.0 / 1000.0) as u32,
         }
     }
 
@@ -42,13 +43,19 @@ impl Window {
         self.renderer.drawer().set_draw_color(color_struct);
     }
 
+    /// Do most of the heavy lifting in redrawing and updating the display.
     pub fn next_frame(&mut self) -> bool {
         if !self.running {
             return false;
         }
 
-        // TODO: replace with actual timing code
-        sdl2::timer::delay(10);
+        self.renderer.drawer().present();
+
+        let mut ticks = sdl2::timer::get_ticks();
+        while ticks < self.ticks_per_frame {
+            sdl2::timer::delay(5);
+            ticks = sdl2::timer::get_ticks();
+        }
 
         // Handle events
         let event = Event::from_sdl2_event(sdl2::event::poll_event());
@@ -62,7 +69,6 @@ impl Window {
         };
 
         self.renderer.drawer().clear();
-        self.renderer.drawer().present();
 
         true
     }
