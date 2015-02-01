@@ -13,10 +13,13 @@ use shape;
 /// Creating multiple Windows is untested!
 ///
 pub struct Window {
-    renderer:           sdl2::render::Renderer,
-    running:            bool,
-    event_queue:        std::vec::Vec<Event>,
-    ticks_per_frame:    u32,
+    renderer:       sdl2::render::Renderer,
+    running:        bool,
+    event_queue:    std::vec::Vec<Event>,
+
+    // timing fields
+    target_ticks_per_frame:     u32,
+    ticks_at_previous_frame:    u32,
 }
 
 /// Top-level Running / Creation Methods
@@ -38,10 +41,11 @@ impl Window {
         ).unwrap();
 
         let window = Window{
-            renderer:           renderer,
-            running:            true,
-            event_queue:        vec![],
-            ticks_per_frame:    (60.0 / 1000.0) as u32,
+            renderer:                   renderer,
+            running:                    true,
+            event_queue:                vec![],
+            target_ticks_per_frame:     (1000.0 / 60.0) as u32,
+            ticks_at_previous_frame:    0,
         };
         window.clear();
         window
@@ -57,11 +61,12 @@ impl Window {
 
         self.renderer.drawer().present();
 
-        let mut ticks = sdl2::timer::get_ticks();
-        while ticks < self.ticks_per_frame {
+        let mut current_ticks = sdl2::timer::get_ticks();
+        while current_ticks - self.ticks_at_previous_frame < self.target_ticks_per_frame {
             sdl2::timer::delay(5);
-            ticks = sdl2::timer::get_ticks();
+            current_ticks = sdl2::timer::get_ticks();
         }
+        self.ticks_at_previous_frame = current_ticks;
 
         // Handle events
         let event = Event::from_sdl2_event(sdl2::event::poll_event());
