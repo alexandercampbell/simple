@@ -7,6 +7,7 @@ repository = "https://github.com/alexandercampbell/simple"
 keywords = ["simple","graphics","2D"]
 authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
 license = "Zlib"
+readme = "README.md"
 
 [lib]
 name = "simple"
