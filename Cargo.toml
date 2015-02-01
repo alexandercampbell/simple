@@ -1,19 +1,23 @@
 
 [package]
-	name = "simple"
-	version = "0.0.1"
-	authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
-	repository = "https://github.com/alexandercampbell/simple"
-	description = "The simplest graphics library for Rust"
-	keywords = ["simple","graphics","2D"]
-	license = "Zlib"
+name = "simple"
+description = "The simplest graphics library, inspired by LOVE2D"
+version = "0.0.1"
+repository = "https://github.com/alexandercampbell/simple"
+keywords = ["simple","graphics","2D"]
+authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
+license = "Zlib"
 
 [lib]
-	name = "simple"
-	crate-type = ["static"]
+name = "simple"
+path = "src/lib.rs"
+crate-type = ["static"]
 
 [dependencies]
-	# Surprise. It's actually an SDL2 wrapper.
-	sdl2 = "*"
-	sdl2-sys = "*"
+sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
+sdl2-sys = "*"
+
+#[[bin]]
+#name = "pong"
+#path = "examples/main.rs"
 
