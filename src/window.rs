@@ -77,12 +77,6 @@ impl Window {
         true
     }
 
-    /// Clear the screen to black. This will set the Window's draw color to 0,0,0,255.
-    pub fn clear(&self) {
-        self.set_color(0, 0, 0, 255);
-        self.renderer.drawer().clear();
-    }
-
     /// Return true when there is an event waiting in the queue for processing.
     pub fn has_event(&self) -> bool { self.event_queue.len() > 0 }
 
@@ -105,6 +99,13 @@ impl Window {
 /// Drawing Methods
 /// ---------------
 impl Window {
+    /// Windows have a color set on them at all times. This color is applied to every draw
+    /// operation. To "unset" the color, call set_color with (255,255,255,255)
+    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
+        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
+        self.renderer.drawer().set_draw_color(color_struct);
+    }
+
     // These functions are just aliases onto self.renderer.drawer() as you can see.
     pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(&rect) }
     pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(&rect) }
@@ -115,11 +116,10 @@ impl Window {
         self.renderer.drawer().draw_points(&polygon.points[])
     }
 
-    /// Windows have a color set on them at all times. This color is applied to every draw
-    /// operation. To "unset" the color, call set_color with (255,255,255,255)
-    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
-        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
-        self.renderer.drawer().set_draw_color(color_struct);
+    /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
+    pub fn clear(&self) {
+        self.set_color(0, 0, 0, 255);
+        self.renderer.drawer().clear();
     }
 }
 
