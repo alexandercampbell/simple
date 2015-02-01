@@ -8,8 +8,8 @@ use std::num::SignedInt;
 extern crate simple;
 use simple::{Window,Event,Rect};
 
-static WIDTH:i32 = 1920;
-static HEIGHT:i32 = 1080;
+static WIDTH:i32 = 1280;
+static HEIGHT:i32 = 720;
 
 /// Return an f32 in the interval [0, upper_bound]
 /// Used to generate random positions for Square.
@@ -71,7 +71,7 @@ impl Square {
 fn main() {
 
     // Create an application
-    let mut app = Window::new("Squares", 1920, 1080);
+    let mut app = Window::new("Squares", WIDTH, HEIGHT);
 
     // Create some objects to live in the application
     let mut squares = vec![
