@@ -18,7 +18,3 @@ crate-type = ["static"]
 sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
 sdl2-sys = "*"
 
-#[[bin]]
-#name = "pong"
-#path = "examples/main.rs"
-
