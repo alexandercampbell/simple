@@ -38,8 +38,8 @@ impl Square {
 
         Square{
             x: x, y: y,
-            speed_x: angle.sin(),
-            speed_y: angle.cos(),
+            speed_x: angle.sin() * 8.0,
+            speed_y: angle.cos() * 8.0,
             color: (random(), random(), random(), 255), // color is totally random
         }
     }
