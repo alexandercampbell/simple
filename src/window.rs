@@ -17,7 +17,7 @@ pub struct Window {
 
 /// Top-level running / creation methods.
 impl Window {
-    pub fn new(name: &str, width: i32, height: i32) -> Window {
+    pub fn new(name: &str, width: i32, height: i32) -> Self {
         sdl2::init(sdl2::INIT_EVERYTHING);
 
         let sdl_window = video::Window::new(
@@ -64,6 +64,7 @@ impl Window {
             None => (),
         };
 
+        self.set_color(0, 0, 0, 255);
         self.renderer.drawer().clear();
 
         true
