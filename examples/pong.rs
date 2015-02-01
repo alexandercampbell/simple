@@ -12,7 +12,7 @@ struct Paddle {
 fn main() {
 
     // Create an application
-    let mut app = Window::new("November", 1920, 1080);
+    let mut app = Window::new("Pong", 1920, 1080);
 
     while app.next_frame() {
 

@@ -21,7 +21,7 @@ impl Window {
 
         let sdl_window = video::Window::new(
             name, WindowPos::PosCentered, WindowPos::PosCentered,
-            width, height, video::BORDERLESS | video::RESIZABLE,
+            width, height, video::SHOWN,
         ).unwrap();
 
         let renderer = sdl2::render::Renderer::from_window(
