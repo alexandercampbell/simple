@@ -2,6 +2,7 @@
 use std;
 
 extern crate sdl2;
+extern crate sdl2_image;
 use sdl2::video::{self,WindowPos};
 
 use event::{self,Event};
@@ -27,7 +28,23 @@ pub struct Window {
 impl Window {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
+
+        // SDL2 Initialization calls. This section here is the reason we can't easily create
+        // multiple Windows. There would have to be some kind of global variable that tracked
+        // whether SDL2 had already been init'd.
+        //
+        // Note that initialization is not the only problem. SDL2 is usually safe to init
+        // multiple times, but it's not safe to de-init SDL2 and then continue using it. We'd
+        // either have to have an explicit Deinitialize() global function or keep a global count
+        // of windows that exist.
+        //
+        // Both solutions are ugly and error-prone, and would probably break thread safety. Going
+        // to assume that there will only be one Window per program.
+        //
+        // TODO: solve this problem
+        //
         sdl2::init(sdl2::INIT_EVERYTHING);
+        sdl2_image::init(sdl2_image::InitFlag::all());
 
         let sdl_window = video::Window::new(
             name, WindowPos::PosCentered, WindowPos::PosCentered,
@@ -132,6 +149,7 @@ impl Window {
 impl std::ops::Drop for Window {
     /// Close the window and clean up resources.
     fn drop(&mut self) {
+        sdl2_image::quit();
         sdl2::quit();
     }
 }
