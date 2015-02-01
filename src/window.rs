@@ -16,10 +16,11 @@ pub struct Window {
 
 impl Window {
     pub fn new(name: &str, width: i32, height: i32) -> Window {
+
         sdl2::init(sdl2::INIT_EVERYTHING);
 
-        let sdl_window = video::Window::new(name,
-            WindowPos::PosCentered, WindowPos::PosCentered,
+        let sdl_window = video::Window::new(
+            name, WindowPos::PosCentered, WindowPos::PosCentered,
             width, height, video::BORDERLESS | video::RESIZABLE,
         ).unwrap();
 
