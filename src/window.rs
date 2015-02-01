@@ -15,6 +15,7 @@ pub struct Window {
     ticks_per_frame:    u32,
 }
 
+/// Top-level running / creation methods.
 impl Window {
     pub fn new(name: &str, width: i32, height: i32) -> Window {
         sdl2::init(sdl2::INIT_EVERYTHING);
@@ -36,11 +37,6 @@ impl Window {
             event_queue:        vec![],
             ticks_per_frame:    (60.0 / 1000.0) as u32,
         }
-    }
-
-    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
-        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
-        self.renderer.drawer().set_draw_color(color_struct);
     }
 
     /// Do most of the heavy lifting in redrawing and updating the display.
@@ -81,7 +77,7 @@ impl Window {
     }
 }
 
-// Drawing routines. These are mostly aliases onto renderer.drawer()
+/// Drawing routines. These are mostly aliases onto renderer.drawer()
 impl Window {
     pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(&rect) }
     pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(&rect) }
@@ -91,10 +87,18 @@ impl Window {
     pub fn draw_polygon(&self, polygon: shape::Polygon) {
         self.renderer.drawer().draw_points(&polygon.points[])
     }
+
+    /// Windows have a color set on them at all times. This color is applied to every draw
+    /// operation. To "unset" the color, call set_color with (255,255,255,255)
+    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
+        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
+        self.renderer.drawer().set_draw_color(color_struct);
+    }
 }
 
 // Dtor for Window.
 impl std::ops::Drop for Window {
+    /// close the window
     fn drop(&mut self) {
         sdl2::quit();
     }
