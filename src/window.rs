@@ -47,6 +47,7 @@ impl Window {
             return false;
         }
 
+        // TODO: replace with actual timing code
         sdl2::timer::delay(10);
 
         // Handle events
@@ -66,13 +67,8 @@ impl Window {
         true
     }
 
-    pub fn next_event(&mut self) -> Option<Event> {
-        if self.event_queue.len() == 0 {
-            None
-        } else {
-            Some(self.event_queue.remove(0))
-        }
-    }
+    pub fn has_event(&self) -> bool { self.event_queue.len() > 0 }
+    pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
 
     pub fn quit(&mut self) {
         self.running = false;
