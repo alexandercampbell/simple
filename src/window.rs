@@ -112,8 +112,8 @@ impl Window {
     }
 
     // These functions are just aliases onto self.renderer.drawer() as you can see.
-    pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(&rect) }
-    pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(&rect) }
+    pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(rect) }
+    pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(rect) }
     pub fn draw_point(&self, point: shape::Point)   { self.renderer.drawer().draw_point(point) }
 
     #[unstable]
