@@ -3,9 +3,11 @@ use std;
 
 extern crate sdl2;
 extern crate sdl2_image;
-use sdl2::video::{self,WindowPos};
+use sdl2::video;
+use sdl2::render;
 
 use event::{self,Event};
+use image::Image;
 use shape;
 
 ///
@@ -14,11 +16,14 @@ use shape;
 /// Creating multiple Windows is untested!
 ///
 pub struct Window {
-    renderer:       sdl2::render::Renderer,
-    running:        bool,
-    event_queue:    std::vec::Vec<Event>,
+    // sdl graphics
+    renderer:                   render::Renderer,
 
-    // timing fields
+    // events and event logic
+    running:                    bool,
+    event_queue:                std::vec::Vec<Event>,
+
+    // timing
     target_ticks_per_frame:     u32,
     ticks_at_previous_frame:    u32,
 }
@@ -45,16 +50,18 @@ impl Window {
         //
         sdl2::init(sdl2::INIT_EVERYTHING);
         sdl2_image::init(sdl2_image::InitFlag::all());
-
         let sdl_window = video::Window::new(
-            name, WindowPos::PosCentered, WindowPos::PosCentered,
-            width, height, video::SHOWN,
+            name,
+            video::WindowPos::PosUndefined,
+            video::WindowPos::PosUndefined,
+            width, height,
+            video::SHOWN,
         ).unwrap();
 
-        let renderer = sdl2::render::Renderer::from_window(
+        let renderer = render::Renderer::from_window(
             sdl_window,
-            sdl2::render::RenderDriverIndex::Auto,
-            sdl2::render::ACCELERATED,
+            render::RenderDriverIndex::Auto,
+            render::ACCELERATED,
         ).unwrap();
 
         let window = Window{
