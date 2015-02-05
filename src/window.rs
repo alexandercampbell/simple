@@ -152,6 +152,16 @@ impl Window {
         self.renderer.drawer().draw_points(&polygon.points[])
     }
 
+    pub fn draw_image(&self, image: Image, x: i32, y: i32) {
+        let surface = self.renderer.get_parent_as_window().unwrap().get_surface().unwrap();
+        surface.blit(&image.surface, Some(shape::Rect{
+            x: x,
+            y: y,
+            w: image.surface.get_width(),
+            h: image.surface.get_height(),
+        }), None);
+    }
+
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
     pub fn clear(&self) {
         self.set_color(0, 0, 0, 255);
