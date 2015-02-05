@@ -3,11 +3,12 @@ use std;
 
 extern crate sdl2;
 extern crate sdl2_image;
-use sdl2::video;
 use sdl2::render;
+use sdl2::video;
+use sdl2::surface::Surface;
+use sdl2_image::LoadSurface;
 
 use event::{self,Event};
-use image::Image;
 use shape;
 
 ///
@@ -153,13 +154,13 @@ impl Window {
         self.renderer.drawer().draw_points(&polygon.points[])
     }
 
+    /// Display the image with its top-left corner at (x, y)
     pub fn draw_image(&self, image: &Image, x: i32, y: i32) {
-        let surface = self.renderer.get_parent_as_window().unwrap().get_surface().unwrap();
-        surface.blit(&image.surface, Some(shape::Rect{
+        self.renderer.drawer().copy(&((*image).texture), Some(shape::Rect{
             x: x,
             y: y,
-            w: image.surface.get_width(),
-            h: image.surface.get_height(),
+            w: image.get_width(),
+            h: image.get_height(),
         }), None);
     }
 
@@ -167,6 +168,35 @@ impl Window {
     pub fn clear(&self) {
         self.set_color(0, 0, 0, 255);
         self.renderer.drawer().clear();
+    }
+}
+
+/// Image represents a bitmap that can be drawn on the screen.
+pub struct Image<'image> {
+    texture:    render::Texture<'image>,
+    width:      i32,
+    height:     i32,
+}
+
+impl<'image> Image<'image> {
+    pub fn get_width(&self) -> i32  { self.width }
+    pub fn get_height(&self) -> i32 { self.height }
+}
+
+/// Creation Methods
+/// ----------------
+impl Window {
+    pub fn load_image(&self, filename: Path) -> Result<Box<Image>,String> {
+        let surface:Surface = match LoadSurface::from_file(&filename) {
+            Ok(surf) => surf,
+            Err(msg) => return Err(msg),
+        };
+
+        Ok(Box::new(Image{
+            width:      surface.get_width(),
+            height:     surface.get_height(),
+            texture:    self.renderer.create_texture_from_surface(&surface).unwrap(),
+        }))
     }
 }
 
