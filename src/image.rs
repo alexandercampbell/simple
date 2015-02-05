@@ -19,6 +19,9 @@ impl Image {
         };
         Ok(Image{surface: surface})
     }
+
+    pub fn width(&self) -> i32      { self.surface.get_width() }
+    pub fn height(&self) -> i32     { self.surface.get_height() }
 }
 
 #[test]
