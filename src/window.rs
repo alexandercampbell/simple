@@ -93,15 +93,22 @@ impl Window {
         self.ticks_at_previous_frame = current_ticks;
 
         // Handle events
-        let event = Event::from_sdl2_event(sdl2::event::poll_event());
-        match event {
-            Some(Event::Quit) => self.quit(),
-            Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
+        loop {
+            let sdl_event = sdl2::event::poll_event();
+            match sdl_event {
+                sdl2::event::Event::None => break,
 
-            // any other unrecognized event
-            Some(e) => (self.event_queue.push(e)),
-            None => (),
-        };
+                // any none-none Event
+                _ => match Event::from_sdl2_event(sdl_event) {
+                    Some(Event::Quit) => self.quit(),
+                    Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
+
+                    // any other unrecognized event
+                    Some(e) => (self.event_queue.push(e)),
+                    None => (),
+                },
+            }
+        }
 
         true
     }
