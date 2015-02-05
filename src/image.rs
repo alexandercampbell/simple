@@ -1,12 +1,11 @@
 
 extern crate sdl2;
 extern crate sdl2_image;
-
 use sdl2::surface::Surface;
 use sdl2_image::LoadSurface;
 
 pub struct Image {
-    surface:    Surface,
+    pub surface:    Surface,
 }
 
 impl Image {
@@ -18,10 +17,7 @@ impl Image {
             Ok(surf) => surf,
             Err(msg) => return Err(msg),
         };
-
-        Ok(Image{
-            surface: surface,
-        })
+        Ok(Image{surface: surface})
     }
 }
 
@@ -32,5 +28,4 @@ fn image_from_file() {
         Err(_)  => (),
     }
 }
-
 
