@@ -83,7 +83,8 @@ impl Window {
             return false;
         }
 
-        self.renderer.drawer().present();
+        //self.renderer.drawer().present();
+        self.renderer.get_parent_as_window().unwrap().update_surface();
 
         let mut current_ticks = sdl2::timer::get_ticks();
         while current_ticks - self.ticks_at_previous_frame < self.target_ticks_per_frame {
@@ -152,7 +153,7 @@ impl Window {
         self.renderer.drawer().draw_points(&polygon.points[])
     }
 
-    pub fn draw_image(&self, image: Image, x: i32, y: i32) {
+    pub fn draw_image(&self, image: &Image, x: i32, y: i32) {
         let surface = self.renderer.get_parent_as_window().unwrap().get_surface().unwrap();
         surface.blit(&image.surface, Some(shape::Rect{
             x: x,
