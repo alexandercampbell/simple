@@ -5,8 +5,6 @@
 //! The simplest graphics library, inspired by LOVE2D. See the README for more information.
 //!
 
-#![feature(path)]
-
 extern crate sdl2;
 extern crate sdl2_image;
 extern crate "sdl2-sys" as sdl2_sys;
