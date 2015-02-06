@@ -17,4 +17,5 @@ crate-type = ["static"]
 [dependencies]
 sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
 sdl2-sys = "*"
+rand = "*"
 
