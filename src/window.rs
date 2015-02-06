@@ -5,8 +5,7 @@ extern crate sdl2;
 extern crate sdl2_image;
 use sdl2::render;
 use sdl2::video;
-use sdl2::surface::Surface;
-use sdl2_image::LoadSurface;
+use sdl2_image::LoadTexture;
 
 use event::{self,Event};
 use shape;
@@ -186,17 +185,14 @@ impl<'image> Image<'image> {
 /// Creation Methods
 /// ----------------
 impl Window {
-    pub fn load_image(&self, filename: Path) -> Result<Box<Image>,String> {
-        let surface:Surface = match LoadSurface::from_file(&filename) {
-            Ok(surf) => surf,
-            Err(msg) => return Err(msg),
-        };
-
-        Ok(Box::new(Image{
-            width:      surface.get_width(),
-            height:     surface.get_height(),
-            texture:    self.renderer.create_texture_from_surface(&surface).unwrap(),
-        }))
+    // Load the image at the path you specify.
+    pub fn load_image(&self, filename: Path) -> Result<Image,String> {
+        let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        Ok(Image{
+            width:      texture.query().width,
+            height:     texture.query().height,
+            texture:    texture,
+        })
     }
 }
 
