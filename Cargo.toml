@@ -2,7 +2,7 @@
 [package]
 name = "simple"
 description = "The simplest graphics library, inspired by LOVE2D"
-version = "0.0.4"
+version = "0.0.5"
 repository = "https://github.com/alexandercampbell/simple"
 keywords = ["simple","graphics","2D"]
 authors = ["Alexander Campbell <alexanderhcampbell@gmail.com>"]
@@ -17,4 +17,5 @@ crate-type = ["static"]
 [dependencies]
 sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
 sdl2-sys = "*"
+rand = "*"
 
