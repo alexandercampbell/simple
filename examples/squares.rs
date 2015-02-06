@@ -1,9 +1,10 @@
-#![feature(rand)]
 #![feature(core)]
 
 use std::num::Float;
-use std::rand::random;
 use std::num::SignedInt;
+
+extern crate rand;
+use rand::random;
 
 extern crate simple;
 use simple::{Window,Event,Rect};
@@ -13,7 +14,7 @@ static HEIGHT:i32 = 720;
 
 /// Return an f32 in the interval [0, upper_bound]
 /// Used to generate random positions for Square.
-fn rand_up_to(upper_bound: f32) -> f32 { random::<f32>().abs() * upper_bound }
+fn rand_up_to(upper_bound: f32) -> f32 {random::<f32>().abs() * upper_bound }
 
 /// Square is our game object. It has a position, movement vector, and color.
 #[derive(Debug,Copy,Clone)]
