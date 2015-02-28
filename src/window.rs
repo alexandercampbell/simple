@@ -2,7 +2,10 @@
 use std;
 
 extern crate sdl2;
-use sdl2::video::{self,WindowPos};
+extern crate sdl2_image;
+use sdl2::render;
+use sdl2::video;
+use sdl2_image::LoadTexture;
 
 use event::{self,Event};
 use shape;
@@ -13,12 +16,15 @@ use shape;
 /// Creating multiple Windows is untested!
 ///
 pub struct Window {
-    context:        sdl2::sdl::Sdl,
-    renderer:       sdl2::render::Renderer,
-    running:        bool,
-    event_queue:    std::vec::Vec<Event>,
+    // sdl graphics
+    context:                    sdl2::sdl::Sdl,
+    renderer:                   render::Renderer,
 
-    // timing fields
+    // events and event logic
+    running:                    bool,
+    event_queue:                std::vec::Vec<Event>,
+
+    // timing
     target_ticks_per_frame:     u32,
     ticks_at_previous_frame:    u32,
 }
@@ -28,17 +34,34 @@ pub struct Window {
 impl Window {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
+        // SDL2 Initialization calls. This section here is the reason we can't easily create
+        // multiple Windows. There would have to be some kind of global variable that tracked
+        // whether SDL2 had already been init'd.
+        //
+        // Note that initialization is not the only problem. SDL2 is usually safe to init
+        // multiple times, but it's not safe to de-init SDL2 and then continue using it. We'd
+        // either have to have an explicit Deinitialize() global function or keep a global count
+        // of windows that exist.
+        //
+        // Both solutions are ugly and error-prone, and would probably break thread safety. Going
+        // to assume that there will only be one Window per program.
+        //
+        // TODO: solve this problem
+        //
         let sdl_context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
-
+        sdl2_image::init(sdl2_image::InitFlag::all());
         let sdl_window = video::Window::new(
-            name, WindowPos::PosCentered, WindowPos::PosCentered,
-            width, height, video::SHOWN,
+            name,
+            video::WindowPos::PosUndefined,
+            video::WindowPos::PosUndefined,
+            width, height,
+            video::SHOWN,
         ).unwrap();
 
-        let renderer = sdl2::render::Renderer::from_window(
+        let renderer = render::Renderer::from_window(
             sdl_window,
-            sdl2::render::RenderDriverIndex::Auto,
-            sdl2::render::ACCELERATED,
+            render::RenderDriverIndex::Auto,
+            render::ACCELERATED,
         ).unwrap();
 
         let window = Window{
@@ -71,20 +94,19 @@ impl Window {
         self.ticks_at_previous_frame = current_ticks;
 
         // Handle events
-        let sdl_event = self.context.event_pump().poll_event();
-        match sdl_event {
-            Some(sdl_event) => {
-                let event = Event::from_sdl2_event(sdl_event);
-                match event {
+        loop {
+            let sdl_event = self.context.event_pump().poll_event();
+            match sdl_event {
+                None => break,
+                Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
                     Some(Event::Quit) => self.quit(),
                     Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
 
                     // any other unrecognized event
                     Some(e) => (self.event_queue.push(e)),
                     None => (),
-                };
-            },
-            _ => (),
+                },
+            };
         }
 
         true
@@ -129,10 +151,57 @@ impl Window {
         self.renderer.drawer().draw_points(&polygon.points[..])
     }
 
+    /// Display the image with its top-left corner at (x, y)
+    pub fn draw_image(&self, image: &Image, x: i32, y: i32) {
+        self.renderer.drawer().copy(&((*image).texture), Some(shape::Rect{
+            x: x,
+            y: y,
+            w: image.get_width(),
+            h: image.get_height(),
+        }), None);
+    }
+
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
     pub fn clear(&self) {
         self.set_color(0, 0, 0, 255);
         self.renderer.drawer().clear();
+    }
+}
+
+/// Image represents a bitmap that can be drawn on the screen.
+pub struct Image<'image> {
+    texture:    render::Texture<'image>,
+    width:      i32,
+    height:     i32,
+}
+
+impl<'image> Image<'image> {
+    pub fn get_width(&self) -> i32  { self.width }
+    pub fn get_height(&self) -> i32 { self.height }
+}
+
+/// Creation Methods
+/// ----------------
+impl Window {
+    // Load the image at the path you specify.
+    //
+    // TODO: work out the ownership issues with load_image and make it public.
+    #[allow(unused)]
+    fn load_image(&self, filename: Path) -> Result<Image,String> {
+        let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        Ok(Image{
+            width:      texture.query().width,
+            height:     texture.query().height,
+            texture:    texture,
+        })
+    }
+}
+
+// Dtor for Window.
+impl std::ops::Drop for Window {
+    /// Close the window and clean up resources.
+    fn drop(&mut self) {
+        sdl2_image::quit();
     }
 }
 
