@@ -22,8 +22,8 @@ rand = "*"
 
 # FIXME: the correct repository is actually github.com/xsleonard/rust-sdl2_image
 #
-# Using Darkspear7's fork for now because he has it updated to be compatible with the latest SDL2
-# from AngryLawyer.
+# Using GBGamer's fork for now because he has it updated to be compatible with
+# the latest SDL2 from AngryLawyer.
 [dependencies.sdl2_image]
-git = "https://github.com/Darkspear7/rust-sdl2_image.git"
+git = "https://github.com/GBGamer/rust-sdl2_image"
 
