@@ -17,6 +17,7 @@ use shape;
 ///
 pub struct Window {
     // sdl graphics
+    context:                    sdl2::sdl::Sdl,
     renderer:                   render::Renderer,
 
     // events and event logic
@@ -33,7 +34,6 @@ pub struct Window {
 impl Window {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
-
         // SDL2 Initialization calls. This section here is the reason we can't easily create
         // multiple Windows. There would have to be some kind of global variable that tracked
         // whether SDL2 had already been init'd.
@@ -48,7 +48,7 @@ impl Window {
         //
         // TODO: solve this problem
         //
-        sdl2::init(sdl2::INIT_EVERYTHING);
+        let sdl_context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
         sdl2_image::init(sdl2_image::InitFlag::all());
         let sdl_window = video::Window::new(
             name,
@@ -65,6 +65,7 @@ impl Window {
         ).unwrap();
 
         let window = Window{
+            context:                    sdl_context,
             renderer:                   renderer,
             running:                    true,
             event_queue:                vec![],
@@ -95,12 +96,10 @@ impl Window {
 
         // Handle events
         loop {
-            let sdl_event = sdl2::event::poll_event();
+            let sdl_event = self.context.event_pump().poll_event();
             match sdl_event {
-                sdl2::event::Event::None => break,
-
-                // any none-none Event
-                _ => match Event::from_sdl2_event(sdl_event) {
+                None => break,
+                Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
                     Some(Event::Quit) => self.quit(),
                     Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
 
@@ -108,7 +107,7 @@ impl Window {
                     Some(e) => (self.event_queue.push(e)),
                     None => (),
                 },
-            }
+            };
         }
 
         true
@@ -150,7 +149,7 @@ impl Window {
 
     #[unstable]
     pub fn draw_polygon(&self, polygon: shape::Polygon) {
-        self.renderer.drawer().draw_points(&polygon.points[])
+        self.renderer.drawer().draw_points(&polygon.points[..])
     }
 
     /// Display the image with its top-left corner at (x, y)
@@ -201,7 +200,6 @@ impl std::ops::Drop for Window {
     /// Close the window and clean up resources.
     fn drop(&mut self) {
         sdl2_image::quit();
-        sdl2::quit();
     }
 }
 
