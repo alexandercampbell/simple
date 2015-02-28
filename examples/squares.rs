@@ -1,5 +1,3 @@
-#![feature(core)]
-
 use std::num::Float;
 use std::num::SignedInt;
 
@@ -93,6 +91,8 @@ fn main() {
                 _  => (),
             }
         }
+
+        app.clear();
 
         // update and draw
         for square in squares.iter_mut() {
