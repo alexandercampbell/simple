@@ -184,7 +184,10 @@ impl<'image> Image<'image> {
 /// ----------------
 impl Window {
     // Load the image at the path you specify.
-    pub fn load_image(&self, filename: Path) -> Result<Image,String> {
+    //
+    // TODO: work out the ownership issues with load_image and make it public.
+    #[allow(unused)]
+    fn load_image(&self, filename: Path) -> Result<Image,String> {
         let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
         Ok(Image{
             width:      texture.query().width,

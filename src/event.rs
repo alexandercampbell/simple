@@ -41,7 +41,6 @@ fn test_from_sdl2_event() {
 
     test(SDL_Event::Quit{timestamp: 0}, Event::Quit);
 
-    // NOTE: can't test more comprehensively because SDL_Events have embedded sdl::video::Window
-    // instances and I can't think of a way to get a window instance for a simple test.
+    // TODO: Test more comprehensively.
 }
 
