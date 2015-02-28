@@ -84,8 +84,7 @@ impl Window {
             return false;
         }
 
-        //self.renderer.drawer().present();
-        self.renderer.get_parent_as_window().unwrap().update_surface();
+        self.renderer.drawer().present();
 
         let mut current_ticks = sdl2::timer::get_ticks();
         while current_ticks - self.ticks_at_previous_frame < self.target_ticks_per_frame {
