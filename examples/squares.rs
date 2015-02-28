@@ -92,6 +92,8 @@ fn main() {
             }
         }
 
+        app.clear();
+
         // update and draw
         for square in squares.iter_mut() {
             square.update();
