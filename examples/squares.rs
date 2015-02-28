@@ -59,8 +59,8 @@ impl Square {
     fn draw(&self, app: &Window) {
         app.set_color(self.color.0, self.color.1, self.color.2, self.color.3);
         app.fill_rect(Rect{
-            x: self.x as i32,
-            y: self.y as i32,
+            x: self.x as i32 - 32,
+            y: self.y as i32 - 32,
             w: 64,
             h: 64,
         });
@@ -68,7 +68,6 @@ impl Square {
 }
 
 fn main() {
-
     // Create an application
     let mut app = Window::new("Squares", WIDTH, HEIGHT);
 
