@@ -13,6 +13,7 @@ use shape;
 /// Creating multiple Windows is untested!
 ///
 pub struct Window {
+    context:        sdl2::sdl::Sdl,
     renderer:       sdl2::render::Renderer,
     running:        bool,
     event_queue:    std::vec::Vec<Event>,
@@ -27,7 +28,7 @@ pub struct Window {
 impl Window {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
-        sdl2::init(sdl2::INIT_EVERYTHING);
+        let sdl_context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
 
         let sdl_window = video::Window::new(
             name, WindowPos::PosCentered, WindowPos::PosCentered,
@@ -41,6 +42,7 @@ impl Window {
         ).unwrap();
 
         let window = Window{
+            context:                    sdl_context,
             renderer:                   renderer,
             running:                    true,
             event_queue:                vec![],
@@ -69,15 +71,21 @@ impl Window {
         self.ticks_at_previous_frame = current_ticks;
 
         // Handle events
-        let event = Event::from_sdl2_event(sdl2::event::poll_event());
-        match event {
-            Some(Event::Quit) => self.quit(),
-            Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
+        let sdl_event = self.context.event_pump().poll_event();
+        match sdl_event {
+            Some(sdl_event) => {
+                let event = Event::from_sdl2_event(sdl_event);
+                match event {
+                    Some(Event::Quit) => self.quit(),
+                    Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
 
-            // any other unrecognized event
-            Some(e) => (self.event_queue.push(e)),
-            None => (),
-        };
+                    // any other unrecognized event
+                    Some(e) => (self.event_queue.push(e)),
+                    None => (),
+                };
+            },
+            _ => (),
+        }
 
         true
     }
@@ -118,21 +126,13 @@ impl Window {
 
     #[unstable]
     pub fn draw_polygon(&self, polygon: shape::Polygon) {
-        self.renderer.drawer().draw_points(&polygon.points[])
+        self.renderer.drawer().draw_points(&polygon.points[..])
     }
 
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
     pub fn clear(&self) {
         self.set_color(0, 0, 0, 255);
         self.renderer.drawer().clear();
-    }
-}
-
-// Dtor for Window.
-impl std::ops::Drop for Window {
-    /// Close the window and clean up resources.
-    fn drop(&mut self) {
-        sdl2::quit();
     }
 }
 

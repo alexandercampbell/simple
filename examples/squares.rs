@@ -1,5 +1,3 @@
-#![feature(core)]
-
 use std::num::Float;
 use std::num::SignedInt;
 
