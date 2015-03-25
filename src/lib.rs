@@ -4,7 +4,6 @@
 //!
 //! The simplest graphics library, inspired by LOVE2D. See the README for more information.
 //!
-#![feature(old_path)]
 
 extern crate rand;
 extern crate sdl2;
@@ -19,4 +18,3 @@ pub use window::{Window,Image};
 mod event;
 mod shape;
 mod window;
-

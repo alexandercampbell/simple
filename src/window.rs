@@ -7,6 +7,8 @@ use sdl2::render;
 use sdl2::video;
 use sdl2_image::LoadTexture;
 
+use std::path::Path;
+
 use event::{self,Event};
 use shape;
 
@@ -187,7 +189,7 @@ impl Window {
     //
     // TODO: work out the ownership issues with load_image and make it public.
     #[allow(unused)]
-    fn load_image(&self, filename: Path) -> Result<Image,String> {
+    fn load_image(&self, filename: &Path) -> Result<Image,String> {
         let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
         Ok(Image{
             width:      texture.query().width,
@@ -204,4 +206,3 @@ impl std::ops::Drop for Window {
         sdl2_image::quit();
     }
 }
-
