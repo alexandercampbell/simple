@@ -19,11 +19,4 @@ sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
 sdl2-sys = "*"
 libc = "*"
 rand = "*"
-
-# FIXME: the correct repository is actually github.com/xsleonard/rust-sdl2_image
-#
-# Using GBGamer's fork for now because he has it updated to be compatible with
-# the latest SDL2 from AngryLawyer.
-[dependencies.sdl2_image]
-git = "https://github.com/GBGamer/rust-sdl2_image"
-
+sdl2_image = "*"
