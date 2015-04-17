@@ -1,6 +1,6 @@
 
 extern crate sdl2;
-extern crate "sdl2-sys" as sdl2_sys;
+extern crate sdl2_sys;
 
 use std;
 
@@ -12,4 +12,3 @@ pub use sdl2_sys::rect::Point;
 pub struct Polygon {
     pub points: std::vec::Vec<Point>,
 }
-

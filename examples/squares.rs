@@ -1,6 +1,3 @@
-use std::num::Float;
-use std::num::SignedInt;
-
 extern crate rand;
 use rand::random;
 
@@ -56,7 +53,7 @@ impl Square {
     }
 
     /// Blit a square representing this object onto the Window.
-    fn draw(&self, app: &Window) {
+    fn draw(&self, app: &mut Window) {
         app.set_color(self.color.0, self.color.1, self.color.2, self.color.3);
         app.fill_rect(Rect{
             x: self.x as i32 - 32,
@@ -96,8 +93,7 @@ fn main() {
         // update and draw
         for square in squares.iter_mut() {
             square.update();
-            square.draw(&app);
+            square.draw(&mut app);
         }
     }
 }
-
