@@ -17,10 +17,10 @@ use shape;
 ///
 /// Creating multiple Windows is untested!
 ///
-pub struct Window {
+pub struct Window<'a> {
     // sdl graphics
     context:                    sdl2::sdl::Sdl,
-    renderer:                   render::Renderer,
+    renderer:                   render::Renderer<'a>,
 
     // events and event logic
     running:                    bool,
@@ -33,7 +33,7 @@ pub struct Window {
 
 /// Top-level Running / Creation Methods
 /// ------------------------------------
-impl Window {
+impl<'a> Window<'a> {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: i32, height: i32) -> Self {
         // SDL2 Initialization calls. This section here is the reason we can't easily create
@@ -53,6 +53,7 @@ impl Window {
         let sdl_context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
         sdl2_image::init(sdl2_image::InitFlag::all());
         let sdl_window = video::Window::new(
+            &sdl_context,
             name,
             video::WindowPos::PosUndefined,
             video::WindowPos::PosUndefined,
@@ -66,7 +67,7 @@ impl Window {
             render::ACCELERATED,
         ).unwrap();
 
-        let window = Window{
+        let mut window = Window{
             context:                    sdl_context,
             renderer:                   renderer,
             running:                    true,
@@ -135,26 +136,26 @@ impl Window {
 
 /// Drawing Methods
 /// ---------------
-impl Window {
+impl<'a> Window<'a> {
     /// Windows have a color set on them at all times. This color is applied to every draw
     /// operation. To "unset" the color, call set_color with (255,255,255,255)
-    pub fn set_color(&self, red: u8, green: u8, blue: u8, alpha: u8) {
+    pub fn set_color(&mut self, red: u8, green: u8, blue: u8, alpha: u8) {
         let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
         self.renderer.drawer().set_draw_color(color_struct);
     }
 
     // These functions are just aliases onto self.renderer.drawer() as you can see.
-    pub fn draw_rect(&self, rect: shape::Rect)      { self.renderer.drawer().draw_rect(rect) }
-    pub fn fill_rect(&self, rect: shape::Rect)      { self.renderer.drawer().fill_rect(rect) }
-    pub fn draw_point(&self, point: shape::Point)   { self.renderer.drawer().draw_point(point) }
+    pub fn draw_rect(&mut self, rect: shape::Rect)     { self.renderer.drawer().draw_rect(rect) }
+    pub fn fill_rect(&mut self, rect: shape::Rect)     { self.renderer.drawer().fill_rect(rect) }
+    pub fn draw_point(&mut self, point: shape::Point)  { self.renderer.drawer().draw_point(point) }
 
     #[unstable]
-    pub fn draw_polygon(&self, polygon: shape::Polygon) {
+    pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
         self.renderer.drawer().draw_points(&polygon.points[..])
     }
 
     /// Display the image with its top-left corner at (x, y)
-    pub fn draw_image(&self, image: &Image, x: i32, y: i32) {
+    pub fn draw_image(&mut self, image: &Image, x: i32, y: i32) {
         self.renderer.drawer().copy(&((*image).texture), Some(shape::Rect{
             x: x,
             y: y,
@@ -164,27 +165,27 @@ impl Window {
     }
 
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
-    pub fn clear(&self) {
+    pub fn clear(&mut self) {
         self.set_color(0, 0, 0, 255);
         self.renderer.drawer().clear();
     }
 }
 
 /// Image represents a bitmap that can be drawn on the screen.
-pub struct Image<'image> {
-    texture:    render::Texture<'image>,
+pub struct Image {
+    texture:    render::Texture,
     width:      i32,
     height:     i32,
 }
 
-impl<'image> Image<'image> {
+impl Image {
     pub fn get_width(&self) -> i32  { self.width }
     pub fn get_height(&self) -> i32 { self.height }
 }
 
 /// Creation Methods
 /// ----------------
-impl Window {
+impl<'a> Window<'a> {
     // Load the image at the path you specify.
     //
     // TODO: work out the ownership issues with load_image and make it public.
@@ -200,7 +201,7 @@ impl Window {
 }
 
 // Dtor for Window.
-impl std::ops::Drop for Window {
+impl<'a> std::ops::Drop for Window<'a> {
     /// Close the window and clean up resources.
     fn drop(&mut self) {
         sdl2_image::quit();

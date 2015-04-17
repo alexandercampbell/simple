@@ -5,7 +5,7 @@ pub use sdl2::keycode::KeyCode;
 pub use sdl2::mouse::Mouse as MouseButton;
 
 /// Event is an enumeration of the effects that a user can have on a running Window.
-#[derive(Copy,PartialEq)]
+#[derive(Copy, Clone, PartialEq)]
 pub enum Event {
     Keyboard{is_down: bool, key: KeyCode},
     Mouse{is_down: bool, button: MouseButton, mouse_x: i32, mouse_y: i32},
@@ -43,4 +43,3 @@ fn test_from_sdl2_event() {
 
     // TODO: Test more comprehensively.
 }
-
