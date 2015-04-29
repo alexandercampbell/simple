@@ -149,7 +149,6 @@ impl<'a> Window<'a> {
     pub fn fill_rect(&mut self, rect: shape::Rect)     { self.renderer.drawer().fill_rect(rect) }
     pub fn draw_point(&mut self, point: shape::Point)  { self.renderer.drawer().draw_point(point) }
 
-    #[unstable]
     pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
         self.renderer.drawer().draw_points(&polygon.points[..])
     }
@@ -189,7 +188,7 @@ impl<'a> Window<'a> {
     // Load the image at the path you specify.
     //
     // TODO: work out the ownership issues with load_image and make it public.
-    #[allow(unused)]
+    #[allow(dead_code)]
     fn load_image(&self, filename: &Path) -> Result<Image,String> {
         let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
         Ok(Image{
