@@ -1,3 +1,8 @@
+/**
+ * This example uses the draw methods on simple::Window to display some rectangles bouncing around
+ * on screen. You can click anywhere to add a new rectangle.
+ */
+
 extern crate rand;
 use rand::random;
 
@@ -30,7 +35,7 @@ impl Square {
         // The multiplication here is because random::<f32> appears to generate a value between 0
         // and 1, so we have to expand that range to [0, 2*PI] to get a full distribution of
         // possible angles.
-        let angle:f32 = rand_up_to(3.141592f32 * 2f32);
+        let angle:f32 = rand_up_to(3.141592 * 2.0);
 
         Square{
             x: x, y: y,
@@ -48,8 +53,8 @@ impl Square {
         self.x += self.speed_x;
         self.y += self.speed_y;
 
-        if self.x < 0f32 || self.x > WIDTH as f32   { self.speed_x *= -1f32; }
-        if self.y < 0f32 || self.y > HEIGHT as f32  { self.speed_y *= -1f32; }
+        if self.x < 0.0 || self.x > WIDTH as f32   { self.speed_x *= -1f32; }
+        if self.y < 0.0 || self.y > HEIGHT as f32  { self.speed_y *= -1f32; }
     }
 
     /// Blit a square representing this object onto the Window.
@@ -81,9 +86,10 @@ fn main() {
         // event handling
         while app.has_event() {
             match app.next_event() {
-                Event::Mouse{is_down: true, mouse_x, mouse_y, ..} => {
-                    squares.push(Square::new_at_position(mouse_x as f32, mouse_y as f32));
-                },
+                // If the user clicks, we add a new Square at the position of the mouse event.
+                Event::Mouse{is_down: true, mouse_x, mouse_y, ..} =>
+                    squares.push(Square::new_at_position(mouse_x as f32, mouse_y as f32)),
+
                 _  => (),
             }
         }
