@@ -61,11 +61,13 @@ impl<'a> Window<'a> {
             video::SHOWN,
         ).unwrap();
 
-        let renderer = render::Renderer::from_window(
+        let mut renderer = render::Renderer::from_window(
             sdl_window,
             render::RenderDriverIndex::Auto,
             render::ACCELERATED,
         ).unwrap();
+        // for transparency
+        renderer.drawer().set_blend_mode(render::BlendMode::Mod);
 
         let mut window = Window{
             context:                    sdl_context,
