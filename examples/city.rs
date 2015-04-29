@@ -9,7 +9,7 @@ use simple::Window;
 
 fn main() {
     let mut window = Window::new("Los Angeles", 640, 480);
-    let pic = window.load_image(Path::new("examples/los_angeles.jpg")).unwrap();
+    let pic = window.load_image(Path::new("examples/city.jpg")).unwrap();
 
     while window.next_frame() {
         window.draw_image(&pic, 0, 0);
