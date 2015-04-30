@@ -193,6 +193,7 @@ impl<'a> Window<'a> {
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
     pub fn clear(&mut self) {
         self.set_color(0, 0, 0, 255);
+        self.prepare_to_draw();
         self.renderer.drawer().clear();
     }
 }
