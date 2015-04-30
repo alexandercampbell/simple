@@ -37,7 +37,7 @@ pub struct Window<'a> {
 /// ------------------------------------
 impl<'a> Window<'a> {
     /// Intialize a new running window. `name` is used as a caption.
-    pub fn new(name: &str, width: i32, height: i32) -> Self {
+    pub fn new(name: &str, width: u16, height: u16) -> Self {
         // SDL2 Initialization calls. This section here is the reason we can't easily create
         // multiple Windows. There would have to be some kind of global variable that tracked
         // whether SDL2 had already been init'd.
@@ -59,7 +59,7 @@ impl<'a> Window<'a> {
             name,
             video::WindowPos::PosUndefined,
             video::WindowPos::PosUndefined,
-            width, height,
+            width as i32, height as i32,
             video::SHOWN,
         ).unwrap();
 
