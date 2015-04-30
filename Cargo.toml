@@ -20,3 +20,5 @@ sdl2-sys = "*"
 libc = "*"
 rand = "*"
 sdl2_image = "*"
+num = "*"
+

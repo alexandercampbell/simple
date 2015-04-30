@@ -4,15 +4,28 @@
 
 use std::path::Path;
 
+extern crate num;
+use num::Float;
+
 extern crate simple;
 use simple::Window;
 
 fn main() {
     let mut window = Window::new("Los Angeles", 640, 480);
-    let pic = window.load_image(Path::new("examples/city.jpg")).unwrap();
+    let mut pic = window.load_image(Path::new("examples/city.jpg")).unwrap();
+
+    let mut frame_number:u64 = 0;
 
     while window.next_frame() {
-        window.draw_image(&pic, 0, 0);
+        window.clear();
+
+        let sine = (frame_number as f32 / 150.0).sin().abs();
+        let color = (sine * 255f32) as u8;
+
+        window.set_color(100 + color / 3, color, 255 - color, 255);
+        window.draw_image(&mut pic, 0, 0);
+
+        frame_number += 1;
     }
 }
 
