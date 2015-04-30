@@ -5,6 +5,7 @@ extern crate sdl2;
 extern crate sdl2_image;
 use sdl2::render;
 use sdl2::video;
+use sdl2::pixels;
 use sdl2_image::LoadTexture;
 
 use std::path::Path;
@@ -21,6 +22,7 @@ pub struct Window<'a> {
     // sdl graphics
     context:                    sdl2::sdl::Sdl,
     renderer:                   render::Renderer<'a>,
+    foreground_color:           pixels::Color,
 
     // events and event logic
     running:                    bool,
@@ -66,14 +68,16 @@ impl<'a> Window<'a> {
             render::RenderDriverIndex::Auto,
             render::ACCELERATED,
         ).unwrap();
+
         // for transparency
-        renderer.drawer().set_blend_mode(render::BlendMode::Mod);
+        renderer.drawer().set_blend_mode(render::BlendMode::Blend);
 
         let mut window = Window{
             context:                    sdl_context,
             renderer:                   renderer,
             running:                    true,
             event_queue:                vec![],
+            foreground_color:           pixels::Color::RGBA(0, 0, 0, 255),
             target_ticks_per_frame:     (1000.0 / 60.0) as u32,
             ticks_at_previous_frame:    0,
         };
@@ -142,22 +146,43 @@ impl<'a> Window<'a> {
     /// Windows have a color set on them at all times. This color is applied to every draw
     /// operation. To "unset" the color, call set_color with (255,255,255,255)
     pub fn set_color(&mut self, red: u8, green: u8, blue: u8, alpha: u8) {
-        let color_struct = sdl2::pixels::Color::RGBA(red, green, blue, alpha);
-        self.renderer.drawer().set_draw_color(color_struct);
+        self.foreground_color = pixels::Color::RGBA(red, green, blue, alpha);
+    }
+
+    fn prepare_to_draw(&mut self) {
+        self.renderer.drawer().set_draw_color(self.foreground_color);
     }
 
     // These functions are just aliases onto self.renderer.drawer() as you can see.
-    pub fn draw_rect(&mut self, rect: shape::Rect)     { self.renderer.drawer().draw_rect(rect) }
-    pub fn fill_rect(&mut self, rect: shape::Rect)     { self.renderer.drawer().fill_rect(rect) }
-    pub fn draw_point(&mut self, point: shape::Point)  { self.renderer.drawer().draw_point(point) }
-
+    pub fn draw_rect(&mut self, rect: shape::Rect)     {
+        self.prepare_to_draw();
+        self.renderer.drawer().draw_rect(rect)
+    }
+    pub fn fill_rect(&mut self, rect: shape::Rect)     {
+        self.prepare_to_draw();
+        self.renderer.drawer().fill_rect(rect)
+    }
+    pub fn draw_point(&mut self, point: shape::Point)  {
+        self.prepare_to_draw();
+        self.renderer.drawer().draw_point(point)
+    }
     pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
+        self.prepare_to_draw();
         self.renderer.drawer().draw_points(&polygon.points[..])
     }
 
     /// Display the image with its top-left corner at (x, y)
-    pub fn draw_image(&mut self, image: &Image, x: i32, y: i32) {
-        self.renderer.drawer().copy(&((*image).texture), Some(shape::Rect{
+    pub fn draw_image(&mut self, image: &mut Image, x: i32, y: i32) {
+        // first, configure the texture for drawing according to the current foreground_color
+        let (r,g,b,a) = match self.foreground_color {
+            pixels::Color::RGB(r, g, b) => (r,g,b,255),
+            pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
+        };
+        image.texture.set_color_mod(r, g, b);
+        image.texture.set_alpha_mod(a);
+
+        // copy the texture onto the drawer()
+        self.renderer.drawer().copy(&(image.texture), Some(shape::Rect{
             x: x,
             y: y,
             w: image.get_width(),
@@ -189,7 +214,8 @@ impl Image {
 impl<'a> Window<'a> {
     /// Load the image at the path you specify.
     pub fn load_image(&self, filename: &Path) -> Result<Image,String> {
-        let texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        let mut texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Image{
             width:      texture.query().width,
             height:     texture.query().height,
