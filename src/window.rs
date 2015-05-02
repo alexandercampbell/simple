@@ -133,6 +133,20 @@ impl<'a> Window<'a> {
     /// same order.
     pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
 
+    /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
+    /// and will always return `false`.
+    pub fn mouse_button_is_down(&self, button: event::MouseButton) -> bool {
+        let flags = sdl2::mouse::get_mouse_state().0;
+        match button {
+            event::MouseButton::Left => flags.contains(sdl2::mouse::LEFTMOUSESTATE),
+            event::MouseButton::Right => flags.contains(sdl2::mouse::RIGHTMOUSESTATE),
+            event::MouseButton::Middle => flags.contains(sdl2::mouse::MIDDLEMOUSESTATE),
+            event::MouseButton::X1 => flags.contains(sdl2::mouse::X1MOUSESTATE),
+            event::MouseButton::X2 => flags.contains(sdl2::mouse::X2MOUSESTATE),
+            _ => false,
+        }
+    }
+
     /// This does not actually cause the program to exit. It just means that next_frame will return
     /// false on the next call.
     pub fn quit(&mut self) {
