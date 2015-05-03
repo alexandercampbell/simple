@@ -13,11 +13,15 @@ use std::path::Path;
 use event::{self,Event};
 use shape;
 
-///
-/// A Window can display graphics, play sounds, and handle events.
-///
-/// Creating multiple Windows is untested!
-///
+/**
+ * A Window can display graphics and handle events.
+ *
+ * A Window has a draw color at all times, and that color is applied to every operation. If you set
+ * the color to `(255, 0, 0)`, all drawn graphics and images will have a red tint.
+ *
+ * Creating multiple Windows is untested and will probably crash!
+ *
+ */
 pub struct Window<'a> {
     // sdl graphics
     context:                    sdl2::sdl::Sdl,
@@ -34,7 +38,7 @@ pub struct Window<'a> {
 }
 
 /// Top-level Running / Creation Methods
-/// ------------------------------------
+/// ====================================
 impl<'a> Window<'a> {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: u16, height: u16) -> Self {
@@ -86,8 +90,10 @@ impl<'a> Window<'a> {
     }
 
     /// Redrawing and update the display, while maintaining a consistent framerate and updating the
-    /// event queue. You should draw your objects immediately before you call this function. NOTE:
-    /// This function returns false if the program should terminate.
+    /// event queue. You should draw your objects immediately before you call this function.
+    ///
+    /// NOTE: This function returns false if the program should terminate. This allows for nice
+    /// constructs like `while app.next_frame() { ... }`
     pub fn next_frame(&mut self) -> bool {
         if !self.running {
             return false;
@@ -163,7 +169,7 @@ impl<'a> Window<'a> {
 }
 
 /// Drawing Methods
-/// ---------------
+/// ===============
 impl<'a> Window<'a> {
     /// Windows have a color set on them at all times. This color is applied to every draw
     /// operation. To "unset" the color, call set_color with (255,255,255,255)
@@ -233,8 +239,8 @@ impl Image {
     pub fn get_height(&self) -> i32 { self.height }
 }
 
-/// Creation Methods
-/// ----------------
+/// Resource Loading Methods
+/// ========================
 impl<'a> Window<'a> {
     /// Load the image at the path you specify.
     pub fn load_image(&self, filename: &Path) -> Result<Image,String> {
@@ -246,6 +252,10 @@ impl<'a> Window<'a> {
             texture:    texture,
         })
     }
+
+    // TODO: font loading support
+    //
+    // https://github.com/alexandercampbell/simple/issues/10
 }
 
 // Dtor for Window.
