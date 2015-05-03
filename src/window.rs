@@ -115,7 +115,6 @@ impl<'a> Window<'a> {
                 None => break,
                 Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
                     Some(Event::Quit) => self.quit(),
-                    Some(Event::Keyboard{key: event::Key::Escape, ..})  => self.quit(),
 
                     // any other unrecognized event
                     Some(e) => (self.event_queue.push(e)),
