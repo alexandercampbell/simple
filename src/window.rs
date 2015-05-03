@@ -226,7 +226,11 @@ impl<'a> Window<'a> {
     }
 }
 
-/// Image represents a bitmap that can be drawn on the screen.
+/**
+ * Image represents a texture that can be drawn on the screen.
+ *
+ * Images are immutable, in the sense that they have no methods to modify their contents.
+ */
 pub struct Image {
     texture:    render::Texture,
     width:      i32,
