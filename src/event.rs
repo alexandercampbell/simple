@@ -12,6 +12,18 @@ pub enum Event {
     Quit,
 }
 
+/// Convert from an sdl2::mouse::Mouse enum into an sdl2::mouse::MouseState bitflag.
+pub fn mousebutton_to_mousestate(button: MouseButton) -> Option<sdl2::mouse::MouseState> {
+    Some(match button {
+        MouseButton::Left => sdl2::mouse::LEFTMOUSESTATE,
+        MouseButton::Right => sdl2::mouse::RIGHTMOUSESTATE,
+        MouseButton::Middle => sdl2::mouse::MIDDLEMOUSESTATE,
+        MouseButton::X1 => sdl2::mouse::X1MOUSESTATE,
+        MouseButton::X2 => sdl2::mouse::X2MOUSESTATE,
+        _ => return None,
+    })
+}
+
 impl Event {
     pub fn from_sdl2_event(e: SDL_Event) -> Option<Event> {
         match e {

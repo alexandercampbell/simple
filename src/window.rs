@@ -135,7 +135,7 @@ impl<'a> Window<'a> {
 
     /// Return true if the button is currently pressed. NOTE: This function is probably not
     /// performant.
-    pub fn key_is_down(&self, key: event::Key) -> bool {
+    pub fn is_key_down(&self, key: event::Key) -> bool {
         // TODO: this has got to be slow but I can't figure out a way to get the state of
         // individual keys from sdl2-rs.
         let state = sdl2::keyboard::get_keyboard_state();
@@ -147,16 +147,12 @@ impl<'a> Window<'a> {
 
     /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
     /// and will always return `false`.
-    pub fn mouse_button_is_down(&self, button: event::MouseButton) -> bool {
+    pub fn is_mouse_button_down(&self, button: event::MouseButton) -> bool {
         let flags = sdl2::mouse::get_mouse_state().0;
-        flags.contains(match button {
-            event::MouseButton::Left => sdl2::mouse::LEFTMOUSESTATE,
-            event::MouseButton::Right => sdl2::mouse::RIGHTMOUSESTATE,
-            event::MouseButton::Middle => sdl2::mouse::MIDDLEMOUSESTATE,
-            event::MouseButton::X1 => sdl2::mouse::X1MOUSESTATE,
-            event::MouseButton::X2 => sdl2::mouse::X2MOUSESTATE,
-            _ => return false,
-        })
+        match event::mousebutton_to_mousestate(button) {
+            Some(state) => flags.contains(state),
+            None => false,
+        }
     }
 
     /// This does not actually cause the program to exit. It just means that next_frame will return
