@@ -37,7 +37,7 @@ pub struct Window<'a> {
 /// ------------------------------------
 impl<'a> Window<'a> {
     /// Intialize a new running window. `name` is used as a caption.
-    pub fn new(name: &str, width: i32, height: i32) -> Self {
+    pub fn new(name: &str, width: u16, height: u16) -> Self {
         // SDL2 Initialization calls. This section here is the reason we can't easily create
         // multiple Windows. There would have to be some kind of global variable that tracked
         // whether SDL2 had already been init'd.
@@ -59,7 +59,7 @@ impl<'a> Window<'a> {
             name,
             video::WindowPos::PosUndefined,
             video::WindowPos::PosUndefined,
-            width, height,
+            width as i32, height as i32,
             video::SHOWN,
         ).unwrap();
 
@@ -109,7 +109,7 @@ impl<'a> Window<'a> {
                 None => break,
                 Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
                     Some(Event::Quit) => self.quit(),
-                    Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
+                    Some(Event::Keyboard{key: event::Key::Escape, ..})  => self.quit(),
 
                     // any other unrecognized event
                     Some(e) => (self.event_queue.push(e)),
@@ -133,6 +133,28 @@ impl<'a> Window<'a> {
     /// same order.
     pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
 
+    /// Return true if the button is currently pressed. NOTE: This function is probably not
+    /// performant.
+    pub fn is_key_down(&self, key: event::Key) -> bool {
+        // TODO: this has got to be slow but I can't figure out a way to get the state of
+        // individual keys from sdl2-rs.
+        let state = sdl2::keyboard::get_keyboard_state();
+        match state.get(&key) {
+            Some(ref b) if **b => true,
+            _ => false,
+        }
+    }
+
+    /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
+    /// and will always return `false`.
+    pub fn is_mouse_button_down(&self, button: event::MouseButton) -> bool {
+        let flags = sdl2::mouse::get_mouse_state().0;
+        match event::mousebutton_to_mousestate(button) {
+            Some(state) => flags.contains(state),
+            None => false,
+        }
+    }
+
     /// This does not actually cause the program to exit. It just means that next_frame will return
     /// false on the next call.
     pub fn quit(&mut self) {
@@ -149,6 +171,7 @@ impl<'a> Window<'a> {
         self.foreground_color = pixels::Color::RGBA(red, green, blue, alpha);
     }
 
+    /// Set up the color according to the internal state of the Window.
     fn prepare_to_draw(&mut self) {
         self.renderer.drawer().set_draw_color(self.foreground_color);
     }

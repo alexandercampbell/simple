@@ -9,8 +9,8 @@ use rand::random;
 extern crate simple;
 use simple::{Window,Event,Rect};
 
-static WIDTH:i32 = 1280;
-static HEIGHT:i32 = 720;
+static WIDTH:u16 = 1280;
+static HEIGHT:u16 = 720;
 
 /// Return an f32 in the interval [0, upper_bound]
 /// Used to generate random positions for Square.
