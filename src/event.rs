@@ -4,11 +4,27 @@ use sdl2::event::Event as SDL_Event;
 pub use sdl2::scancode::ScanCode as Key;
 pub use sdl2::mouse::Mouse as MouseButton;
 
-/// Event is an enumeration of the effects that a user can have on a running Window.
+/**
+ * Event is an enumeration of the effects that a user can have on a running Window.
+ *
+ * TODO: Add support for more events like touch events and window resizes.
+ */
 #[derive(Copy, Clone, PartialEq)]
 pub enum Event {
+    /// Keyboard is either a keypress or a keyrelease. The `is_down` bool tells you which :)
     Keyboard{is_down: bool, key: Key},
+
+    /// Mouse can be either a click or a click release. Refer to `is_down`. Note that the position
+    /// of the mouse at the time of the click is listed. The mouse may have moved in the meantime,
+    /// so for precision, you can use the position fields on this variant.
     Mouse{is_down: bool, button: MouseButton, mouse_x: i32, mouse_y: i32},
+
+    /// The user has signaled to the OS that the application should be killed. This could happen
+    /// through clicking the X in the corner of the window or using CMD-Q or Alt-F4 (depending on
+    /// the platform).
+    ///
+    /// You normally do not have to catch this event yourself. Window has built-in code to process
+    /// this case.
     Quit,
 }
 
