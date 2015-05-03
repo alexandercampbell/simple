@@ -12,18 +12,6 @@ pub enum Event {
     Quit,
 }
 
-/// Convert from an sdl2::mouse::Mouse enum into an sdl2::mouse::MouseState bitflag.
-pub fn mousebutton_to_mousestate(button: MouseButton) -> Option<sdl2::mouse::MouseState> {
-    Some(match button {
-        MouseButton::Left => sdl2::mouse::LEFTMOUSESTATE,
-        MouseButton::Right => sdl2::mouse::RIGHTMOUSESTATE,
-        MouseButton::Middle => sdl2::mouse::MIDDLEMOUSESTATE,
-        MouseButton::X1 => sdl2::mouse::X1MOUSESTATE,
-        MouseButton::X2 => sdl2::mouse::X2MOUSESTATE,
-        _ => return None,
-    })
-}
-
 impl Event {
     pub fn from_sdl2_event(e: SDL_Event) -> Option<Event> {
         match e {
@@ -55,3 +43,24 @@ fn test_from_sdl2_event() {
 
     // TODO: Test more comprehensively.
 }
+
+/// Convert from an sdl2::mouse::Mouse enum into an sdl2::mouse::MouseState bitflag.
+pub fn mousebutton_to_mousestate(button: MouseButton) -> Option<sdl2::mouse::MouseState> {
+    Some(match button {
+        MouseButton::Left => sdl2::mouse::LEFTMOUSESTATE,
+        MouseButton::Right => sdl2::mouse::RIGHTMOUSESTATE,
+        MouseButton::Middle => sdl2::mouse::MIDDLEMOUSESTATE,
+        MouseButton::X1 => sdl2::mouse::X1MOUSESTATE,
+        MouseButton::X2 => sdl2::mouse::X2MOUSESTATE,
+        _ => return None,
+    })
+}
+
+#[test]
+fn test_mousebutton_to_mousestate() {
+    assert!(mousebutton_to_mousestate(MouseButton::Left) == Some(sdl2::mouse::LEFTMOUSESTATE));
+    assert!(mousebutton_to_mousestate(MouseButton::X1) == Some(sdl2::mouse::X1MOUSESTATE));
+    assert!(mousebutton_to_mousestate(MouseButton::X2) == Some(sdl2::mouse::X2MOUSESTATE));
+    assert!(mousebutton_to_mousestate(MouseButton::Unknown(5)) == None);
+}
+
