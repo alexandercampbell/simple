@@ -197,7 +197,7 @@ impl<'a> Window<'a> {
     }
     pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
         self.prepare_to_draw();
-        self.renderer.drawer().draw_points(&polygon.points[..])
+        self.renderer.drawer().draw_points(&polygon[..])
     }
 
     /// Display the image with its top-left corner at (x, y)
