@@ -1,13 +1,13 @@
 
 extern crate sdl2;
 use sdl2::event::Event as SDL_Event;
-pub use sdl2::keycode::KeyCode;
+pub use sdl2::scancode::ScanCode as Key;
 pub use sdl2::mouse::Mouse as MouseButton;
 
 /// Event is an enumeration of the effects that a user can have on a running Window.
 #[derive(Copy, Clone, PartialEq)]
 pub enum Event {
-    Keyboard{is_down: bool, key: KeyCode},
+    Keyboard{is_down: bool, key: Key},
     Mouse{is_down: bool, button: MouseButton, mouse_x: i32, mouse_y: i32},
     Quit,
 }
@@ -19,8 +19,8 @@ impl Event {
             SDL_Event::Quit{..} => Some(Event::Quit),
 
             // Keyboard
-            SDL_Event::KeyDown{keycode: key, ..}  => Some(Event::Keyboard{is_down: true, key: key}),
-            SDL_Event::KeyUp{keycode: key, ..}    => Some(Event::Keyboard{is_down: false, key: key}),
+            SDL_Event::KeyDown{scancode: key, ..}  => Some(Event::Keyboard{is_down: true, key: key}),
+            SDL_Event::KeyUp{scancode: key, ..}    => Some(Event::Keyboard{is_down: false, key: key}),
 
             // Mouse
             SDL_Event::MouseButtonDown{mouse_btn: button, x, y, ..} =>

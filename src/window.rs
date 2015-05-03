@@ -109,7 +109,7 @@ impl<'a> Window<'a> {
                 None => break,
                 Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
                     Some(Event::Quit) => self.quit(),
-                    Some(Event::Keyboard{key: event::KeyCode::Escape, ..})  => self.quit(),
+                    Some(Event::Keyboard{key: event::Key::Escape, ..})  => self.quit(),
 
                     // any other unrecognized event
                     Some(e) => (self.event_queue.push(e)),
@@ -132,6 +132,18 @@ impl<'a> Window<'a> {
     /// 2, 3 during a frame, then the next three calls to next_event will return 1, 2, 3 in the
     /// same order.
     pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
+
+    /// Return true if the button is currently pressed. NOTE: This function is probably not
+    /// performant.
+    pub fn key_is_down(&self, key: event::Key) -> bool {
+        // TODO: this has got to be slow but I can't figure out a way to get the state of
+        // individual keys from sdl2-rs.
+        let state = sdl2::keyboard::get_keyboard_state();
+        match state.get(&key) {
+            Some(ref b) if **b => true,
+            _ => false,
+        }
+    }
 
     /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
     /// and will always return `false`.
@@ -163,6 +175,7 @@ impl<'a> Window<'a> {
         self.foreground_color = pixels::Color::RGBA(red, green, blue, alpha);
     }
 
+    /// Set up the color according to the internal state of the Window.
     fn prepare_to_draw(&mut self) {
         self.renderer.drawer().set_draw_color(self.foreground_color);
     }
