@@ -9,6 +9,9 @@ use num::Float;
 extern crate simple;
 use simple::*;
 
+const SCREEN_WIDTH:i32 = 1024;
+const SCREEN_HEIGHT:i32 = 768;
+
 struct Ball {
     rect: Rect,
     speed: i32,
@@ -19,17 +22,22 @@ impl Ball {
     fn new(xpos: i32, ypos: i32) -> Ball {
         Ball{
             rect: Rect{
-                x: xpos/2 - 16,
-                y: ypos/2 - 16,
+                x: xpos - 16,
+                y: ypos - 16,
                 w: 32,
                 h: 32,
             },
-            speed: 5,
+            speed: 9,
             angle: rand::random(),
         }
     }
 
     fn update(&mut self) {
+        // bounds check against the edges of the screen
+        let bounce_x = self.rect.x+self.rect.w > SCREEN_WIDTH || self.rect.x < 0;
+        let bounce_y = self.rect.y+self.rect.h > SCREEN_HEIGHT || self.rect.y < 0;
+        self.bounce(bounce_x, bounce_y);
+
         self.rect.x += (self.speed as f32 * self.angle.sin()) as i32;
         self.rect.y += (self.speed as f32 * self.angle.cos()) as i32;
     }
@@ -46,7 +54,7 @@ impl Ball {
     fn bounce(&mut self, x_bounce: bool, y_bounce: bool) {
         if x_bounce {
             // this is almost definitely the wrong formula. TODO: revisit
-            self.angle = 3.141592 - self.angle;
+            self.angle = 3.141592/2.0 + self.angle;
         }
         if y_bounce {
             self.angle = 3.141592 - self.angle;
@@ -62,7 +70,10 @@ fn main() {
         w: 100,
         h: 16,
     };
-    let mut ball = Ball::new(1024/2, 768/2);
+    let mut ball = Ball::new(
+        SCREEN_WIDTH/2,
+        SCREEN_HEIGHT/2,
+    );
 
     while app.next_frame() {
         app.clear();
