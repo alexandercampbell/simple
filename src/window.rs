@@ -160,6 +160,12 @@ impl<'a> Window<'a> {
         }
     }
 
+    // Return the current position of the mouse, relative to the top-left corner of the Window.
+    pub fn mouse_position(&self) -> (i32, i32) {
+        let state = sdl2::mouse::get_mouse_state();
+        (state.1, state.2)
+    }
+
     /// This does not actually cause the program to exit. It just means that next_frame will return
     /// false on the next call.
     pub fn quit(&mut self) {
