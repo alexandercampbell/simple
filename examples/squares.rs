@@ -1,4 +1,4 @@
-/**
+/*!
  * This example uses the draw methods on simple::Window to display some rectangles bouncing around
  * on screen. You can click anywhere to add a new rectangle.
  */

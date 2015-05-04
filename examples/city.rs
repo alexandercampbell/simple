@@ -1,4 +1,4 @@
-/**
+/*!
  * This example demonstrates how to load an image and draw it onto the screen.
  */
 

@@ -1,11 +1,9 @@
-//!
 //! simple
 //! ======
 //!
 //! The simplest graphics library, inspired by LOVE2D. See the README for more information.
 //!
 //! Homepage: https://github.com/alexandercampbell/simple
-//!
 
 extern crate rand;
 extern crate sdl2;
