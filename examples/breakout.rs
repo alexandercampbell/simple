@@ -27,15 +27,15 @@ impl Ball {
                 w: 32,
                 h: 32,
             },
-            speed: 9,
+            speed: 6,
             angle: rand::random(),
         }
     }
 
     fn update(&mut self) {
         // bounds check against the edges of the screen
-        let bounce_x = self.rect.x+self.rect.w > SCREEN_WIDTH || self.rect.x < 0;
-        let bounce_y = self.rect.y+self.rect.h > SCREEN_HEIGHT || self.rect.y < 0;
+        let bounce_x = self.rect.x < 0 || self.rect.x+self.rect.w > SCREEN_WIDTH;
+        let bounce_y = self.rect.y < 0 || self.rect.y+self.rect.h > SCREEN_HEIGHT;
         self.bounce(bounce_x, bounce_y);
 
         self.rect.x += (self.speed as f32 * self.angle.sin()) as i32;
@@ -52,13 +52,13 @@ impl Ball {
     }
 
     fn bounce(&mut self, x_bounce: bool, y_bounce: bool) {
-        if x_bounce {
-            // this is almost definitely the wrong formula. TODO: revisit
-            self.angle = 3.141592/2.0 + self.angle;
-        }
-        if y_bounce {
-            self.angle = 3.141592 - self.angle;
-        }
+        // early out
+        if !(x_bounce || y_bounce) { return; }
+
+        let x_vel = self.angle.sin() * if x_bounce { -1.0 } else { 1.0 };
+        let y_vel = self.angle.cos() * if y_bounce { -1.0 } else { 1.0 };
+
+        self.angle = x_vel.atan2(y_vel);
     }
 }
 
