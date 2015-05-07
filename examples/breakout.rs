@@ -12,6 +12,10 @@ use simple::*;
 const SCREEN_WIDTH:i32 = 1024;
 const SCREEN_HEIGHT:i32 = 768;
 
+/**
+ * Ball is a very simple representation of a rectangle with a speed and angle. Ball contains some
+ * methods to update and draw. Note that the Ball is actually drawn as a square.
+ */
 struct Ball {
     rect: Rect,
     speed: i32,
@@ -24,8 +28,8 @@ impl Ball {
             rect: Rect{
                 x: xpos - 16,
                 y: ypos - 16,
-                w: 32,
-                h: 32,
+                w: 24,
+                h: 24,
             },
             speed: 9,
             angle: rand::random(),
@@ -43,21 +47,32 @@ impl Ball {
         self.rect.y += (self.speed as f32 * self.angle.cos()) as i32;
     }
 
-    /*
+    /**
      * Clamp the ball onto the screen.
      *
      * This is really annoying but it's required because sometimes the angle fuzzing can cause
      * the ball to be stuct outside of the window.
      */
     fn clamp_on_screen(&mut self) {
+        // X-dimension
         self.rect.x = if self.rect.x < 0 { 0 } else { self.rect.x };
-        self.rect.x = if self.rect.x+self.rect.w > SCREEN_WIDTH { SCREEN_WIDTH-self.rect.w } else { self.rect.x };
+        self.rect.x = if self.rect.x+self.rect.w > SCREEN_WIDTH {
+            SCREEN_WIDTH-self.rect.w
+        } else {
+            self.rect.x
+        };
+
+        // Y-dimension
         self.rect.y = if self.rect.y < 0 { 0 } else { self.rect.y };
-        self.rect.y = if self.rect.y+self.rect.h > SCREEN_HEIGHT { SCREEN_HEIGHT-self.rect.h } else { self.rect.y };
+        self.rect.y = if self.rect.y+self.rect.h > SCREEN_HEIGHT {
+            SCREEN_HEIGHT-self.rect.h
+        } else {
+            self.rect.y
+        };
     }
 
     fn draw(&self, app: &mut Window) {
-        app.set_color(255, 0, 255, 255);
+        app.set_color(255, 255, 0, 255);
         app.fill_rect(self.rect);
     }
 
