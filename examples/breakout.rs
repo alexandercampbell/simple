@@ -78,21 +78,13 @@ impl Ball {
 
 fn main() {
     let mut app = Window::new("Breakout", 1024, 768);
-    let mut player = Rect{
-        x: 0,
-        y: 700,
-        w: 100,
-        h: 8,
-    };
-    let mut ball = Ball::new(
-        SCREEN_WIDTH/2,
-        SCREEN_HEIGHT/2,
-    );
+    let mut ball = Ball::new(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+    let mut player = Rect{x: 0, y: 700, w: 100, h: 8};
 
     while app.next_frame() {
         app.clear();
 
-        // move the paddle to the mouse cursor
+        // smooth glide the paddle towards the mouse cursor
         player.x += (app.mouse_position().0 - player.w/2 - player.x) / 3;
 
         ball.update();
