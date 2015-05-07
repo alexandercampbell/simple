@@ -27,7 +27,7 @@ impl Ball {
                 w: 32,
                 h: 32,
             },
-            speed: 6,
+            speed: 9,
             angle: rand::random(),
         }
     }
@@ -47,10 +47,6 @@ impl Ball {
         app.fill_rect(self.rect);
     }
 
-    fn intersects(&self, other: &Rect) -> bool {
-        self.rect.has_intersection(other)
-    }
-
     fn bounce(&mut self, x_bounce: bool, y_bounce: bool) {
         // early out
         if !(x_bounce || y_bounce) { return; }
@@ -60,6 +56,8 @@ impl Ball {
 
         self.angle = x_vel.atan2(y_vel);
     }
+
+    fn intersects(&self, other: &Rect) -> bool { self.rect.has_intersection(other) }
 }
 
 fn main() {
@@ -68,7 +66,7 @@ fn main() {
         x: 0,
         y: 700,
         w: 100,
-        h: 16,
+        h: 8,
     };
     let mut ball = Ball::new(
         SCREEN_WIDTH/2,
@@ -86,6 +84,10 @@ fn main() {
 
         if ball.intersects(&player) {
             ball.bounce(false, true);
+
+            // A hack because we don't actually have physics capabilities. Prevent the ball from
+            // getting stuck inside the paddle.
+            ball.rect.y = player.y - ball.rect.h;
         }
 
         app.set_color(255,255,255,255);
