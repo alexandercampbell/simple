@@ -93,7 +93,10 @@ impl Ball {
 
 fn main() {
     let mut app = Window::new("Breakout", 1024, 768);
-    let mut ball = Ball::new(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
+    let mut entities = vec![
+        Ball::new(SCREEN_WIDTH*2/3, SCREEN_HEIGHT/2),
+        Ball::new(SCREEN_WIDTH/3, SCREEN_HEIGHT/2),
+    ];
     let mut player = Rect{x: 0, y: 700, w: 100, h: 8};
 
     while app.next_frame() {
@@ -102,15 +105,17 @@ fn main() {
         // smooth glide the paddle towards the mouse cursor
         player.x += (app.mouse_position().0 - player.w/2 - player.x) / 3;
 
-        ball.update();
-        ball.draw(&mut app);
+        for entity in entities.iter_mut() {
+            entity.update();
+            entity.draw(&mut app);
 
-        if ball.intersects(&player) {
-            ball.bounce(false, true);
+            if entity.intersects(&player) {
+                entity.bounce(false, true);
 
-            // A hack because we don't actually have physics capabilities. Prevent the ball from
-            // getting stuck inside the paddle.
-            ball.rect.y = player.y - ball.rect.h;
+                // A hack because we don't actually have physics capabilities. Prevent the ball from
+                // getting stuck inside the paddle.
+                entity.rect.y = player.y - entity.rect.h;
+            }
         }
 
         app.set_color(255,255,255,255);
