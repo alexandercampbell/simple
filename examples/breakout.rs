@@ -37,9 +37,23 @@ impl Ball {
         let bounce_x = self.rect.x < 0 || self.rect.x+self.rect.w > SCREEN_WIDTH;
         let bounce_y = self.rect.y < 0 || self.rect.y+self.rect.h > SCREEN_HEIGHT;
         self.bounce(bounce_x, bounce_y);
+        self.clamp_on_screen();
 
         self.rect.x += (self.speed as f32 * self.angle.sin()) as i32;
         self.rect.y += (self.speed as f32 * self.angle.cos()) as i32;
+    }
+
+    /*
+     * Clamp the ball onto the screen.
+     *
+     * This is really annoying but it's required because sometimes the angle fuzzing can cause
+     * the ball to be stuct outside of the window.
+     */
+    fn clamp_on_screen(&mut self) {
+        self.rect.x = if self.rect.x < 0 { 0 } else { self.rect.x };
+        self.rect.x = if self.rect.x+self.rect.w > SCREEN_WIDTH { SCREEN_WIDTH-self.rect.w } else { self.rect.x };
+        self.rect.y = if self.rect.y < 0 { 0 } else { self.rect.y };
+        self.rect.y = if self.rect.y+self.rect.h > SCREEN_HEIGHT { SCREEN_HEIGHT-self.rect.h } else { self.rect.y };
     }
 
     fn draw(&self, app: &mut Window) {
@@ -55,6 +69,8 @@ impl Ball {
         let y_vel = self.angle.cos() * if y_bounce { -1.0 } else { 1.0 };
 
         self.angle = x_vel.atan2(y_vel);
+        let fuzzing = rand::random::<u8>() as f32 / 750.0;
+        self.angle += fuzzing;
     }
 
     fn intersects(&self, other: &Rect) -> bool { self.rect.has_intersection(other) }
