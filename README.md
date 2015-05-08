@@ -10,11 +10,12 @@ I liked the ease-of-use that LOVE2D provided but I wanted the advantage of a
 typed compiler (Rust).
 
 Simple is implemented as a layer on top of [AngryLawyer's
-Rust-SDL2](https://github.com/AngryLawyer/rust-sdl2) and is NOT written for
-performance. Remember: **Simple is a prototyping tool!**
+Rust-SDL2](https://github.com/AngryLawyer/rust-sdl2); you need to have `sdl2`
+and `sdl2_image` installed as development packages on your system. Simple is NOT
+written for performance. Remember: **Simple is a prototyping tool!**
 
-Example
--------
+Hello World
+-----------
 
 ```rust
 let mut app = simple::Window::new("hello world", 1920, 1080);
@@ -28,6 +29,15 @@ app.draw_rect(simple::Rect{
 });
 
 while app.next_frame() {}
+```
+
+Examples
+--------
+
+Check out the `examples/` directory for some mini-programs that use Simple.
+
+```sh
+cargo run --example breakout
 ```
 
 
