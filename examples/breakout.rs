@@ -91,13 +91,41 @@ impl Ball {
     fn intersects(&self, other: &Rect) -> bool { self.rect.has_intersection(other) }
 }
 
+struct Block {
+    rect: Rect,
+}
+const BLOCK_WIDTH:i32 = 48;
+const BLOCK_HEIGHT:i32 = 32;
+
+impl Block {
+    fn new(x: i32, y: i32) -> Block {
+        Block{rect: Rect{
+            x: x,
+            y: y,
+            w: BLOCK_WIDTH,
+            h: BLOCK_HEIGHT,
+        }}
+    }
+
+    fn draw(&self, app: &mut Window) {
+        app.set_color(255, 0, 255, 255);
+        app.fill_rect(self.rect);
+    }
+}
+
 fn main() {
     let mut app = Window::new("Breakout", 1024, 768);
-    let mut entities = vec![
-        Ball::new(SCREEN_WIDTH*2/3, SCREEN_HEIGHT/2),
-        Ball::new(SCREEN_WIDTH/3, SCREEN_HEIGHT/2),
-    ];
+    let mut ball = Ball::new(SCREEN_WIDTH/2, SCREEN_HEIGHT/2);
     let mut player = Rect{x: 0, y: 700, w: 100, h: 8};
+
+    let mut blocks = vec![];
+    let spacing_x = BLOCK_WIDTH*3/2;
+    let spacing_y = BLOCK_HEIGHT*3/2;
+    for i in 1..(SCREEN_WIDTH/spacing_x) {
+        for j in 1..(SCREEN_HEIGHT/spacing_y/2) {
+            blocks.push(Block::new(i * spacing_x, j * spacing_y));
+        }
+    }
 
     while app.next_frame() {
         app.clear();
@@ -105,18 +133,21 @@ fn main() {
         // smooth glide the paddle towards the mouse cursor
         player.x += (app.mouse_position().0 - player.w/2 - player.x) / 3;
 
-        for entity in entities.iter_mut() {
-            entity.update();
-            entity.draw(&mut app);
+        ball.update();
+        ball.draw(&mut app);
 
-            if entity.intersects(&player) {
-                entity.bounce(false, true);
+        if ball.intersects(&player) {
+            ball.bounce(false, true);
 
-                // A hack because we don't actually have physics capabilities. Prevent the ball from
-                // getting stuck inside the paddle.
-                entity.rect.y = player.y - entity.rect.h;
-            }
+            // A hack because we don't actually have physics capabilities. Prevent the ball from
+            // getting stuck inside the paddle.
+            ball.rect.y = player.y - ball.rect.h;
         }
+
+        blocks = blocks.into_iter().filter(|ref b| {
+            b.draw(&mut app);
+            !ball.intersects(&(b.rect))
+        }).collect();
 
         app.set_color(255,255,255,255);
         app.fill_rect(player);
