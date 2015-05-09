@@ -27,6 +27,7 @@ pub struct Window<'a> {
     context:                    sdl2::sdl::Sdl,
     renderer:                   render::Renderer<'a>,
     foreground_color:           pixels::Color,
+    font:                       Font,
 
     // events and event logic
     running:                    bool,
@@ -224,6 +225,11 @@ impl<'a> Window<'a> {
         }), None);
     }
 
+    /// Write the text to the screen at (x, y) and return a rectangle describing the area occupied
+    /// by `text`.
+    pub fn print(text: &str, x: i32, y: i32) -> shape::Rect {
+    }
+
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
     pub fn clear(&mut self) {
         self.set_color(0, 0, 0, 255);
@@ -248,6 +254,21 @@ impl Image {
     pub fn get_height(&self) -> i32 { self.height }
 }
 
+pub struct Font {
+    texture:    render::Texture,
+    string:     String,
+    char_rects: Vec<shape::Rect>,
+}
+
+impl Font {
+    pub fn is_printable(&self, ch: char) -> bool {
+        for self_ch in self.string.chars() {
+            if ch == self_ch { return true; }
+        }
+        false
+    }
+}
+
 /// Resource Loading Methods
 /// ========================
 impl<'a> Window<'a> {
@@ -261,10 +282,6 @@ impl<'a> Window<'a> {
             texture:    texture,
         })
     }
-
-    // TODO: font loading support
-    //
-    // https://github.com/alexandercampbell/simple/issues/10
 }
 
 // Dtor for Window.
