@@ -235,11 +235,30 @@ impl<'a> Window<'a> {
         }), None);
     }
 
-    /// Write the text to the screen at (x, y) and return a rectangle describing the area occupied
-    /// by `text`.
-    pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
+    /// Write the text to the screen at (x, y).
+    ///
+    /// TODO: return a rectangle describing the area occupied by `text`.
+    pub fn print(&mut self, text: &str, x: i32, y: i32) {
         self.prepare_to_draw();
-        shape::Rect{x:0,y:0,w:0,h:0}
+        set_texture_color(&self.foreground_color, &mut self.font.texture);
+
+        let mut current_x = x;
+
+        for ch in text.chars() {
+            let font_rect = match self.font.get_rect(ch) {
+                None => continue,
+                Some(r) => r,
+            };
+
+            self.renderer.drawer().copy(&(self.font.texture), Some(*font_rect), Some(shape::Rect{
+                x: current_x,
+                y: y,
+                w: font_rect.w,
+                h: font_rect.h,
+            }));
+
+            current_x += font_rect.w;
+        }
     }
 
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
@@ -378,6 +397,30 @@ impl<'a> Window<'a> {
         self.create_font(surf, string)
     }
 }
+
+/// Load a Font from the hard drive. See the documentation on `Font` for details.
+fn load_surface(filename: &Path) -> Result<surface::Surface, String> {
+    LoadSurface::from_file(filename)
+}
+
+/// Load a Font from a slice of bytes in memory already. See the documentation on `Font` for
+/// details.
+fn load_surface_from_memory(data: &[u8]) -> Result<surface::Surface, String> {
+    let rwops = try!(rwops::RWops::from_bytes(data));
+    let surface = try!(rwops.load());
+    Ok(surface)
+}
+
+fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
+    // configure the texture for drawing according to the current foreground_color
+    let (r,g,b,a) = match *color {
+        pixels::Color::RGB(r, g, b) => (r,g,b,255),
+        pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
+    };
+    texture.set_color_mod(r, g, b);
+    texture.set_alpha_mod(a);
+}
+
 
 // Dtor for Window.
 impl<'a> std::ops::Drop for Window<'a> {
