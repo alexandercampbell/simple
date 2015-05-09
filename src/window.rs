@@ -219,12 +219,7 @@ impl<'a> Window<'a> {
     /// Display the image with its top-left corner at (x, y)
     pub fn draw_image(&mut self, image: &mut Image, x: i32, y: i32) {
         // first, configure the texture for drawing according to the current foreground_color
-        let (r,g,b,a) = match self.foreground_color {
-            pixels::Color::RGB(r, g, b) => (r,g,b,255),
-            pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
-        };
-        image.texture.set_color_mod(r, g, b);
-        image.texture.set_alpha_mod(a);
+        set_texture_color(&self.foreground_color, &mut image.texture);
 
         // copy the texture onto the drawer()
         self.renderer.drawer().copy(&(image.texture), Some(shape::Rect{
@@ -240,17 +235,21 @@ impl<'a> Window<'a> {
     /// TODO: return a rectangle describing the area occupied by `text`.
     pub fn print(&mut self, text: &str, x: i32, y: i32) {
         self.prepare_to_draw();
-        set_texture_color(&self.foreground_color, &mut self.font.texture);
+        let mut font = match self.font {
+            Some(ref mut r) => r,
+            None => panic!("no font set on window"), // FIXME: shouldn't be possible to have no font
+        };
+        set_texture_color(&self.foreground_color, &mut font.texture);
 
         let mut current_x = x;
 
         for ch in text.chars() {
-            let font_rect = match self.font.get_rect(ch) {
+            let font_rect = match font.get_rect(ch) {
                 None => continue,
                 Some(r) => r,
             };
 
-            self.renderer.drawer().copy(&(self.font.texture), Some(*font_rect), Some(shape::Rect{
+            self.renderer.drawer().copy(&(font.texture), Some(*font_rect), Some(shape::Rect{
                 x: current_x,
                 y: y,
                 w: font_rect.w,
@@ -302,8 +301,9 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn is_printable(&self, ch: char) -> bool    { self.chars.contains_key(&ch) }
-    pub fn len(&self) -> usize                      { self.chars.len() }
+    pub fn is_printable(&self, ch: char) -> bool             { self.chars.contains_key(&ch) }
+    pub fn len(&self) -> usize                               { self.chars.len() }
+    pub fn get_rect(&self, ch: char) -> Option<&shape::Rect> { self.chars.get(&ch) }
 }
 
 /// This is the default font.
@@ -398,19 +398,6 @@ impl<'a> Window<'a> {
     }
 }
 
-/// Load a Font from the hard drive. See the documentation on `Font` for details.
-fn load_surface(filename: &Path) -> Result<surface::Surface, String> {
-    LoadSurface::from_file(filename)
-}
-
-/// Load a Font from a slice of bytes in memory already. See the documentation on `Font` for
-/// details.
-fn load_surface_from_memory(data: &[u8]) -> Result<surface::Surface, String> {
-    let rwops = try!(rwops::RWops::from_bytes(data));
-    let surface = try!(rwops.load());
-    Ok(surface)
-}
-
 fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
     // configure the texture for drawing according to the current foreground_color
     let (r,g,b,a) = match *color {
@@ -420,7 +407,6 @@ fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
     texture.set_color_mod(r, g, b);
     texture.set_alpha_mod(a);
 }
-
 
 // Dtor for Window.
 impl<'a> std::ops::Drop for Window<'a> {
