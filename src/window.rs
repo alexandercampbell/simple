@@ -1,14 +1,16 @@
 
 use std;
+use std::path::Path;
+use std::collections::HashMap;
 
 extern crate sdl2;
 extern crate sdl2_image;
 use sdl2::render;
 use sdl2::video;
 use sdl2::pixels;
+use sdl2::surface;
 use sdl2_image::LoadTexture;
-
-use std::path::Path;
+use sdl2_image::LoadSurface;
 
 use event::{self,Event};
 use shape;
@@ -27,7 +29,7 @@ pub struct Window<'a> {
     context:                    sdl2::sdl::Sdl,
     renderer:                   render::Renderer<'a>,
     foreground_color:           pixels::Color,
-    font:                       Font,
+    font:                       Option<Font>,
 
     // events and event logic
     running:                    bool,
@@ -85,6 +87,7 @@ impl<'a> Window<'a> {
             foreground_color:           pixels::Color::RGBA(0, 0, 0, 255),
             target_ticks_per_frame:     (1000.0 / 60.0) as u32,
             ticks_at_previous_frame:    0,
+            font:                       None,
         };
         window.clear();
         window
@@ -228,6 +231,7 @@ impl<'a> Window<'a> {
     /// Write the text to the screen at (x, y) and return a rectangle describing the area occupied
     /// by `text`.
     pub fn print(text: &str, x: i32, y: i32) -> shape::Rect {
+        shape::Rect{x:0,y:0,w:0,h:0}
     }
 
     /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
@@ -254,18 +258,28 @@ impl Image {
     pub fn get_height(&self) -> i32 { self.height }
 }
 
+/**
+ * Font is a way to render text, loaded from a specially formatted image.
+ *
+ * Note that Font is not loaded from a TrueType file. Loading from an image is a little faster and
+ * a little simpler and a little more portable, but has a couple disadvantages. For one, the size
+ * is fixed by the file. To have two different font sizes, you have to create two different Fonts
+ * from two different files. Another disadvantage is that these special ImageFonts are less widely
+ * available.
+ *
+ * This link describes how ImageFonts work: https://love2d.org/wiki/Tutorial:Fonts_and_Text
+ */
 pub struct Font {
     texture:    render::Texture,
-    string:     String,
-    char_rects: Vec<shape::Rect>,
+    chars:      HashMap<char, shape::Rect>,
 }
 
 impl Font {
     pub fn is_printable(&self, ch: char) -> bool {
-        for self_ch in self.string.chars() {
-            if ch == self_ch { return true; }
-        }
-        false
+        self.chars.contains_key(&ch)
+    }
+    pub fn len(&self) -> usize {
+        self.chars.len()
     }
 }
 
@@ -273,7 +287,7 @@ impl Font {
 /// ========================
 impl<'a> Window<'a> {
     /// Load the image at the path you specify.
-    pub fn load_image(&self, filename: &Path) -> Result<Image,String> {
+    pub fn load_image(&self, filename: &Path) -> Result<Image, String> {
         let mut texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
         texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Image{
@@ -281,6 +295,69 @@ impl<'a> Window<'a> {
             height:     texture.query().height,
             texture:    texture,
         })
+    }
+
+    /// Parse a font from the Surface, using the string as a guideline.
+    fn create_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
+        let mut surf = surf;
+        let mut chars: HashMap<char, shape::Rect> = HashMap::new();
+
+        let surf_width = surf.get_width();
+        let surf_height = surf.get_height();
+        let mut current_rect: Option<shape::Rect> = None;
+
+        surf.with_lock(|pixels| {
+            // `pixels` is an array of [u8; width * height]
+            let border_color = pixels[0];
+
+            // Move through the surface and divide it into rectangles according to the color of the
+            // topmost pixel.
+            for i in 0..(surf_width as usize) {
+                if pixels[i] == border_color {
+                    match current_rect {
+                        Some(mut rect) => {
+                            let c = match string.chars().nth(chars.len()) {
+                                Some(c) => c,
+                                None => {
+                                    // Out of characters to add to the hashmap, so just return with
+                                    // what have parsed so far.
+                                    return;
+                                }
+                            };
+                            rect.w = rect.x - (i as i32);
+                            chars.insert(c, rect.clone());
+                            current_rect = None;
+                        },
+                        None => (),
+                    }
+                } else {
+                    match current_rect {
+                        Some(_) => (),
+                        None => {
+                            current_rect = Some(shape::Rect{
+                                x: i as i32,
+                                y: 0,
+                                w: 0,
+                                h: surf_height,
+                            });
+                        },
+                    }
+                }
+            }
+        });
+
+        let texture = try!(self.renderer.create_texture_from_surface(&surf));
+        Ok(Font{
+            texture:    texture,
+            chars:      chars,
+        })
+    }
+
+    /// Load a Font from the hard drive. This can be slow because the Font has to be processed. See
+    /// the documentation on `Font` for details.
+    pub fn load_font(&self, filename: &Path, string: String) -> Result<Font, String> {
+        let surf: surface::Surface = try!(LoadSurface::from_file(filename));
+        self.create_font(surf, string)
     }
 }
 
