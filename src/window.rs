@@ -9,8 +9,10 @@ use sdl2::render;
 use sdl2::video;
 use sdl2::pixels;
 use sdl2::surface;
+use sdl2::rwops;
 use sdl2_image::LoadTexture;
 use sdl2_image::LoadSurface;
+use sdl2_image::ImageRWops;
 
 use event::{self,Event};
 use shape;
@@ -89,6 +91,11 @@ impl<'a> Window<'a> {
             ticks_at_previous_frame:    0,
             font:                       None,
         };
+
+        // load the default font
+        let font = window.load_font_from_memory(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
+        window.font = Some(font);
+
         window.clear();
         window
     }
@@ -230,7 +237,8 @@ impl<'a> Window<'a> {
 
     /// Write the text to the screen at (x, y) and return a rectangle describing the area occupied
     /// by `text`.
-    pub fn print(text: &str, x: i32, y: i32) -> shape::Rect {
+    pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
+        self.prepare_to_draw();
         shape::Rect{x:0,y:0,w:0,h:0}
     }
 
@@ -275,13 +283,14 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn is_printable(&self, ch: char) -> bool {
-        self.chars.contains_key(&ch)
-    }
-    pub fn len(&self) -> usize {
-        self.chars.len()
-    }
+    pub fn is_printable(&self, ch: char) -> bool    { self.chars.contains_key(&ch) }
+    pub fn len(&self) -> usize                      { self.chars.len() }
 }
+
+/// This is the default font.
+const DEFAULT_FONT_BYTES: &'static [u8] = include_bytes!("default_font.png");
+const DEFAULT_FONT_STR: &'static str =
+    " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/():;%&`'*#=[]\"";
 
 /// Resource Loading Methods
 /// ========================
@@ -296,6 +305,8 @@ impl<'a> Window<'a> {
             texture:    texture,
         })
     }
+
+    // TODO: Split this out so it can be tested.
 
     /// Parse a font from the Surface, using the string as a guideline.
     fn create_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
@@ -353,10 +364,17 @@ impl<'a> Window<'a> {
         })
     }
 
-    /// Load a Font from the hard drive. This can be slow because the Font has to be processed. See
-    /// the documentation on `Font` for details.
+    /// Load a Font from the hard drive. See the documentation on `Font` for details.
     pub fn load_font(&self, filename: &Path, string: String) -> Result<Font, String> {
         let surf: surface::Surface = try!(LoadSurface::from_file(filename));
+        self.create_font(surf, string)
+    }
+
+    /// Load a Font from a slice of bytes in memory already. See the documentation on `Font` for
+    /// details.
+    pub fn load_font_from_memory(&self, data: &[u8], string: String) -> Result<Font, String> {
+        let rwops = try!(rwops::RWops::from_bytes(data));
+        let surf: surface::Surface = try!(rwops.load());
         self.create_font(surf, string)
     }
 }
