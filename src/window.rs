@@ -97,6 +97,8 @@ impl<'a> Window<'a> {
         window.font = Some(font);
 
         window.clear();
+        window.renderer.drawer().present();
+        window.set_color(255, 255, 255, 255);
         window
     }
 
@@ -260,10 +262,15 @@ impl<'a> Window<'a> {
         }
     }
 
-    /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
+    /// Clear the screen to black.
     pub fn clear(&mut self) {
-        self.set_color(0, 0, 0, 255);
-        self.prepare_to_draw();
+        self.renderer.drawer().set_draw_color(pixels::Color::RGB(0, 0, 0));
+        self.renderer.drawer().clear();
+    }
+
+    /// Clear the screen to the color you specify.
+    pub fn clear_to_color(&mut self, r: u8, g: u8, b: u8) {
+        self.renderer.drawer().set_draw_color(pixels::Color::RGB(r, g, b));
         self.renderer.drawer().clear();
     }
 }
