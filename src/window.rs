@@ -335,7 +335,7 @@ impl<'a> Window<'a> {
                                     return;
                                 }
                             };
-                            rect.w = rect.x - (i as i32);
+                            rect.w = (i as i32) - rect.x;
                             chars.insert(c, rect.clone());
                             current_rect = None;
                         },
