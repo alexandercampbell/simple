@@ -2,17 +2,14 @@
  * This example demonstrates how to load an image and draw it onto the screen.
  */
 
-use std::path::Path;
-
 extern crate num;
 use num::Float;
 
 extern crate simple;
-use simple::Window;
 
 fn main() {
-    let mut window = Window::new("Los Angeles", 640, 480);
-    let mut pic = window.load_image(Path::new("examples/city.jpg")).unwrap();
+    let mut window = simple::Window::new("Los Angeles", 640, 480);
+    let mut pic = window.load_image_from_bytes(include_bytes!("city.jpg")).unwrap();
 
     let mut frame_number:u64 = 0;
 
