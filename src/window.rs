@@ -254,7 +254,11 @@ impl<'a> Window<'a> {
 
         for ch in text.chars() {
             let font_rect = match font.get_rect(ch) {
-                None => continue,
+                None => {
+                    // Our Font cannot represent the current character. Leave a little space.
+                    current_x += 5;
+                    continue;
+                },
                 Some(r) => r,
             };
 
@@ -385,6 +389,9 @@ impl<'a> Window<'a> {
 
     /// Parse a font from the Surface, using the string as a guideline.
     fn parse_image_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
+        // FIXME: Return an error if `string` contains any duplicate characters. Otherwise,
+        // behavior can become very confusing.
+
         let mut surf = surf;
         let mut chars: HashMap<char, shape::Rect> = HashMap::new();
 
