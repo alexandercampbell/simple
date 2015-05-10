@@ -16,6 +16,7 @@ use sdl2_image::ImageRWops;
 
 use event::{self,Event};
 use shape;
+use util;
 
 /**
  * A Window can display graphics and handle events.
@@ -226,7 +227,7 @@ impl<'a> Window<'a> {
     /// Display the image with its top-left corner at (x, y)
     pub fn draw_image(&mut self, image: &mut Image, x: i32, y: i32) {
         // first, configure the texture for drawing according to the current foreground_color
-        set_texture_color(&self.foreground_color, &mut image.texture);
+        util::set_texture_color(&self.foreground_color, &mut image.texture);
 
         // copy the texture onto the drawer()
         self.renderer.drawer().copy(&(image.texture), Some(shape::Rect{
@@ -248,7 +249,7 @@ impl<'a> Window<'a> {
             // be updated to reflect this.
             None => panic!("no font set on window"),
         };
-        set_texture_color(&self.foreground_color, &mut font.texture);
+        util::set_texture_color(&self.foreground_color, &mut font.texture);
 
         let mut current_x = x;
 
@@ -462,17 +463,6 @@ impl<'a> Window<'a> {
         let surf: surface::Surface = try!(rwops.load());
         self.parse_image_font(surf, string)
     }
-}
-
-/// Utility method to set the texture's color and alpha mods to the Color.
-fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
-    // configure the texture for drawing according to the current foreground_color
-    let (r,g,b,a) = match *color {
-        pixels::Color::RGB(r, g, b) => (r,g,b,255),
-        pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
-    };
-    texture.set_color_mod(r, g, b);
-    texture.set_alpha_mod(a);
 }
 
 // Dtor for Window.

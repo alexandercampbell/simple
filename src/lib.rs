@@ -26,4 +26,5 @@ pub use event::MouseButton as MouseButton;
 mod event;
 mod shape;
 mod window;
+mod util;
 
