@@ -1,17 +1,22 @@
 
 use std;
+use std::path::Path;
+use std::collections::HashMap;
 
 extern crate sdl2;
 extern crate sdl2_image;
 use sdl2::render;
 use sdl2::video;
 use sdl2::pixels;
+use sdl2::surface;
+use sdl2::rwops;
 use sdl2_image::LoadTexture;
-
-use std::path::Path;
+use sdl2_image::LoadSurface;
+use sdl2_image::ImageRWops;
 
 use event::{self,Event};
 use shape;
+use util;
 
 /**
  * A Window can display graphics and handle events.
@@ -27,6 +32,7 @@ pub struct Window<'a> {
     context:                    sdl2::sdl::Sdl,
     renderer:                   render::Renderer<'a>,
     foreground_color:           pixels::Color,
+    font:                       Option<Font>,
 
     // events and event logic
     running:                    bool,
@@ -84,8 +90,16 @@ impl<'a> Window<'a> {
             foreground_color:           pixels::Color::RGBA(0, 0, 0, 255),
             target_ticks_per_frame:     (1000.0 / 60.0) as u32,
             ticks_at_previous_frame:    0,
+            font:                       None,
         };
+
+        // load the default font
+        let font = window.load_font(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
+        window.font = Some(font);
+
         window.clear();
+        window.renderer.drawer().present();
+        window.set_color(255, 255, 255, 255);
         window
     }
 
@@ -160,10 +174,15 @@ impl<'a> Window<'a> {
         }
     }
 
-    // Return the current position of the mouse, relative to the top-left corner of the Window.
+    /// Return the current position of the mouse, relative to the top-left corner of the Window.
     pub fn mouse_position(&self) -> (i32, i32) {
         let state = sdl2::mouse::get_mouse_state();
         (state.1, state.2)
+    }
+
+    /// Use this Font for future calls to `print()`.
+    pub fn set_font(&mut self, font: Font) {
+        self.font = Some(font)
     }
 
     /// This does not actually cause the program to exit. It just means that next_frame will return
@@ -208,12 +227,7 @@ impl<'a> Window<'a> {
     /// Display the image with its top-left corner at (x, y)
     pub fn draw_image(&mut self, image: &mut Image, x: i32, y: i32) {
         // first, configure the texture for drawing according to the current foreground_color
-        let (r,g,b,a) = match self.foreground_color {
-            pixels::Color::RGB(r, g, b) => (r,g,b,255),
-            pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
-        };
-        image.texture.set_color_mod(r, g, b);
-        image.texture.set_alpha_mod(a);
+        util::set_texture_color(&self.foreground_color, &mut image.texture);
 
         // copy the texture onto the drawer()
         self.renderer.drawer().copy(&(image.texture), Some(shape::Rect{
@@ -224,10 +238,59 @@ impl<'a> Window<'a> {
         }), None);
     }
 
-    /// Clear the screen to black. This will set the Window's draw color to (0,0,0,255)
-    pub fn clear(&mut self) {
-        self.set_color(0, 0, 0, 255);
+    /// Write the text to the screen at (x, y) using the currently set font on the Window. Return a
+    /// Rectangle describing the area of the screen that was modified.
+    // TODO: Implement print_rect that wraps text to fit inside of a Rectangle.
+    pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
         self.prepare_to_draw();
+        let mut font = match self.font {
+            Some(ref mut r) => r,
+
+            // FIXME: shouldn't be possible to have no font, and the `font` field on Window should
+            // be updated to reflect this.
+            None => panic!("no font set on window"),
+        };
+        util::set_texture_color(&self.foreground_color, &mut font.texture);
+
+        let mut current_x = x;
+
+        for ch in text.chars() {
+            let font_rect = match font.get_rect(ch) {
+                None => {
+                    // Our Font cannot represent the current character. Leave a little space.
+                    current_x += 5;
+                    continue;
+                },
+                Some(r) => r,
+            };
+
+            self.renderer.drawer().copy(&(font.texture), Some(*font_rect), Some(shape::Rect{
+                x: current_x,
+                y: y,
+                w: font_rect.w,
+                h: font_rect.h,
+            }));
+
+            current_x += font_rect.w;
+        }
+
+        shape::Rect{
+            x: x,
+            y: y,
+            w: current_x - x,
+            h: font.get_height(),
+        }
+    }
+
+    /// Clear the screen to black. Does not affect the current rendering color.
+    pub fn clear(&mut self) {
+        self.renderer.drawer().set_draw_color(pixels::Color::RGB(0, 0, 0));
+        self.renderer.drawer().clear();
+    }
+
+    /// Clear the screen to the color you specify.
+    pub fn clear_to_color(&mut self, r: u8, g: u8, b: u8) {
+        self.renderer.drawer().set_draw_color(pixels::Color::RGB(r, g, b));
         self.renderer.drawer().clear();
     }
 }
@@ -248,11 +311,58 @@ impl Image {
     pub fn get_height(&self) -> i32 { self.height }
 }
 
+/**
+ * Font is a way to render text, loaded from a specially formatted image.
+ *
+ * Note that Font is not loaded from a TrueType file, but instead, from a specially formatted
+ * image. Loading from an image is a little faster and a little simpler and a little more portable,
+ * but has a couple disadvantages. For one, the font size is fixed by the file. To have two
+ * different font sizes, you have to create two different Fonts from two different files. Another
+ * disadvantage is that these special images are less widely available.
+ *
+ * This link describes how ImageFonts work: https://love2d.org/wiki/Tutorial:Fonts_and_Text
+ */
+pub struct Font {
+    texture:    render::Texture,
+    chars:      HashMap<char, shape::Rect>,
+    height:     i32,
+}
+
+impl Font {
+    /// Determine whether "ch" exists in this Font.
+    pub fn is_printable(&self, ch: char) -> bool {
+        self.chars.contains_key(&ch)
+    }
+
+    /// Return the number of printable characters that the Font contains.
+    pub fn len(&self) -> usize {
+        self.chars.len()
+    }
+
+    /// Return the height of the Font. This is constant for every possible character, while the
+    /// individual character widths vary. Note that certain characters (such a single quote `'`)
+    /// might not actually take up all of `height`. However, no character may exceed this limit.
+    pub fn get_height(&self) -> i32 {
+        self.height
+    }
+
+    /// Return the portion of the Font's texture that is used to draw the `char` you provide. If
+    /// the character can't be drawn by this Font, return None.
+    fn get_rect(&self, ch: char) -> Option<&shape::Rect> {
+        self.chars.get(&ch)
+    }
+}
+
+/// This is the default font.
+const DEFAULT_FONT_BYTES: &'static [u8] = include_bytes!("default_font.png");
+const DEFAULT_FONT_STR: &'static str =
+    " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/():;%&`'*#=[]\"";
+
 /// Resource Loading Methods
 /// ========================
 impl<'a> Window<'a> {
     /// Load the image at the path you specify.
-    pub fn load_image(&self, filename: &Path) -> Result<Image,String> {
+    pub fn load_image_from_file(&self, filename: &Path) -> Result<Image, String> {
         let mut texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
         texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Image{
@@ -262,9 +372,99 @@ impl<'a> Window<'a> {
         })
     }
 
-    // TODO: font loading support
-    //
-    // https://github.com/alexandercampbell/simple/issues/10
+    /// Load an image from a slice of bytes. This function is particularly powerful when used in
+    /// conjunction with the `include_bytes` macro that embeds data in the compiled executable. In
+    /// this way, you can pack all of your game data into your executable.
+    pub fn load_image(&self, data: &[u8]) -> Result<Image, String> {
+        let rwops = try!(rwops::RWops::from_bytes(data));
+        let surf: surface::Surface = try!(rwops.load());
+        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
+        texture.set_blend_mode(render::BlendMode::Blend);
+        Ok(Image{
+            width:      texture.query().width,
+            height:     texture.query().height,
+            texture:    texture,
+        })
+    }
+
+    // TODO: Split this out so it can be tested.
+
+    /// Parse a font from the Surface, using the string as a guideline.
+    fn parse_image_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
+        if util::string_has_duplicate_chars(string.clone()) {
+            return Err("image font string has duplicate characters".to_string())
+        }
+
+        let mut surf = surf;
+        let mut chars: HashMap<char, shape::Rect> = HashMap::new();
+
+        let surf_width = surf.get_width();
+        let surf_height = surf.get_height();
+        let mut current_rect: Option<shape::Rect> = None;
+
+        surf.with_lock(|pixels| {
+            // `pixels` is an array of [u8; width * height]
+            let border_color = pixels[0];
+
+            // Move through the surface and divide it into rectangles according to the color of the
+            // topmost pixel.
+            for i in 0..(surf_width as usize) {
+                if pixels[i] == border_color {
+                    match current_rect {
+                        Some(mut rect) => {
+                            let c = match string.chars().nth(chars.len()) {
+                                Some(c) => c,
+                                None => {
+                                    // Out of characters to add to the hashmap, so just return with
+                                    // what have parsed so far.
+                                    return;
+                                }
+                            };
+                            rect.w = (i as i32) - rect.x;
+                            chars.insert(c, rect.clone());
+                            current_rect = None;
+                        },
+                        None => (),
+                    }
+                } else {
+                    match current_rect {
+                        Some(_) => (),
+                        None => {
+                            current_rect = Some(shape::Rect{
+                                x: i as i32,
+                                y: 0,
+                                w: 0,
+                                h: surf_height,
+                            });
+                        },
+                    }
+                }
+            }
+        });
+
+        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
+        texture.set_blend_mode(render::BlendMode::Blend);
+        Ok(Font{
+            height:     texture.query().height,
+            texture:    texture,
+            chars:      chars,
+        })
+    }
+
+    /// Load a Font from the hard drive. See the documentation on `Font` for details.
+    pub fn load_font_from_file(&self, filename: &Path, string: String) -> Result<Font, String> {
+        let surf: surface::Surface = try!(LoadSurface::from_file(filename));
+        self.parse_image_font(surf, string)
+    }
+
+    /// Load a Font from a slice of bytes. See the documentation on `Font` for details. This
+    /// function is particularly powerful when used in conjunction with the `include_bytes` macro
+    /// that embeds data in the compiled executable.
+    pub fn load_font(&self, data: &[u8], string: String) -> Result<Font, String> {
+        let rwops = try!(rwops::RWops::from_bytes(data));
+        let surf: surface::Surface = try!(rwops.load());
+        self.parse_image_font(surf, string)
+    }
 }
 
 // Dtor for Window.

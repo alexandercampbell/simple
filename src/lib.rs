@@ -13,7 +13,7 @@ extern crate sdl2_sys;
 // Re-export some of the symbols from the other modules.
 pub use event::{Event};
 pub use shape::{Polygon,Rect,Point};
-pub use window::{Window,Image};
+pub use window::{Window,Image,Font};
 
 // rustdoc has some bugs right now and the below code works around this. Rust issue link:
 // https://github.com/rust-lang/rust/issues/24305
@@ -26,4 +26,5 @@ pub use event::MouseButton as MouseButton;
 mod event;
 mod shape;
 mod window;
+mod util;
 
