@@ -305,6 +305,7 @@ impl Image {
 pub struct Font {
     texture:    render::Texture,
     chars:      HashMap<char, shape::Rect>,
+    height:     i32,
 }
 
 impl Font {
@@ -316,6 +317,13 @@ impl Font {
     /// Return the number of printable characters that the Font contains.
     pub fn len(&self) -> usize {
         self.chars.len()
+    }
+
+    /// Return the height of the Font. This is constant for every possible character, while the
+    /// individual character widths vary. Note that certain characters (such a single quote `'`)
+    /// might not actually take up all of `height`. However, no character may exceed this limit.
+    pub fn get_height(&self) -> i32 {
+        self.height
     }
 
     /// Return the portion of the Font's texture that is used to draw the `char` you provide. If
@@ -413,6 +421,7 @@ impl<'a> Window<'a> {
         let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
         texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Font{
+            height:     texture.query().height,
             texture:    texture,
             chars:      chars,
         })
