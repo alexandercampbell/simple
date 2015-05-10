@@ -390,8 +390,9 @@ impl<'a> Window<'a> {
 
     /// Parse a font from the Surface, using the string as a guideline.
     fn parse_image_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
-        // FIXME: Return an error if `string` contains any duplicate characters. Otherwise,
-        // behavior can become very confusing.
+        if util::string_has_duplicate_chars(string.clone()) {
+            return Err("image font string has duplicate characters".to_string())
+        }
 
         let mut surf = surf;
         let mut chars: HashMap<char, shape::Rect> = HashMap::new();
