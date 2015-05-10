@@ -232,14 +232,16 @@ impl<'a> Window<'a> {
         }), None);
     }
 
-    /// Write the text to the screen at (x, y).
-    ///
-    /// TODO: return a rectangle describing the area occupied by `text`.
-    pub fn print(&mut self, text: &str, x: i32, y: i32) {
+    /// Write the text to the screen at (x, y) using the currently set font on the Window. Return a
+    /// Rectangle describing the area of the screen that was modified.
+    pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
         self.prepare_to_draw();
         let mut font = match self.font {
             Some(ref mut r) => r,
-            None => panic!("no font set on window"), // FIXME: shouldn't be possible to have no font
+
+            // FIXME: shouldn't be possible to have no font, and the `font` field on Window should
+            // be updated to reflect this.
+            None => panic!("no font set on window"),
         };
         set_texture_color(&self.foreground_color, &mut font.texture);
 
@@ -259,6 +261,13 @@ impl<'a> Window<'a> {
             }));
 
             current_x += font_rect.w;
+        }
+
+        shape::Rect{
+            x: x,
+            y: y,
+            w: current_x - x,
+            h: font.get_height(),
         }
     }
 
