@@ -240,6 +240,7 @@ impl<'a> Window<'a> {
 
     /// Write the text to the screen at (x, y) using the currently set font on the Window. Return a
     /// Rectangle describing the area of the screen that was modified.
+    // TODO: Implement print_rect that wraps text to fit inside of a Rectangle.
     pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
         self.prepare_to_draw();
         let mut font = match self.font {
@@ -281,7 +282,7 @@ impl<'a> Window<'a> {
         }
     }
 
-    /// Clear the screen to black.
+    /// Clear the screen to black. Does not affect the current rendering color.
     pub fn clear(&mut self) {
         self.renderer.drawer().set_draw_color(pixels::Color::RGB(0, 0, 0));
         self.renderer.drawer().clear();
