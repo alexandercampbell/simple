@@ -308,9 +308,21 @@ pub struct Font {
 }
 
 impl Font {
-    pub fn is_printable(&self, ch: char) -> bool             { self.chars.contains_key(&ch) }
-    pub fn len(&self) -> usize                               { self.chars.len() }
-    pub fn get_rect(&self, ch: char) -> Option<&shape::Rect> { self.chars.get(&ch) }
+    /// Determine whether "ch" exists in this Font.
+    pub fn is_printable(&self, ch: char) -> bool {
+        self.chars.contains_key(&ch)
+    }
+
+    /// Return the number of printable characters that the Font contains.
+    pub fn len(&self) -> usize {
+        self.chars.len()
+    }
+
+    /// Return the portion of the Font's texture that is used to draw the `char` you provide. If
+    /// the character can't be drawn by this Font, return None.
+    fn get_rect(&self, ch: char) -> Option<&shape::Rect> {
+        self.chars.get(&ch)
+    }
 }
 
 /// This is the default font.
