@@ -93,7 +93,7 @@ impl<'a> Window<'a> {
         };
 
         // load the default font
-        let font = window.load_font_from_memory(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
+        let font = window.load_font_from_bytes(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
         window.font = Some(font);
 
         window.clear();
@@ -322,8 +322,23 @@ const DEFAULT_FONT_STR: &'static str =
 /// ========================
 impl<'a> Window<'a> {
     /// Load the image at the path you specify.
-    pub fn load_image(&self, filename: &Path) -> Result<Image, String> {
+    pub fn load_image_from_file(&self, filename: &Path) -> Result<Image, String> {
         let mut texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        texture.set_blend_mode(render::BlendMode::Blend);
+        Ok(Image{
+            width:      texture.query().width,
+            height:     texture.query().height,
+            texture:    texture,
+        })
+    }
+
+    /// Load an image from a slice of bytes. This function is particularly powerful when used in
+    /// conjunction with the `include_bytes` macro that embeds data in the compiled executable. In
+    /// this way, you can pack all of your game data into your executable.
+    pub fn load_image_from_bytes(&self, data: &[u8]) -> Result<Image, String> {
+        let rwops = try!(rwops::RWops::from_bytes(data));
+        let surf: surface::Surface = try!(rwops.load());
+        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
         texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Image{
             width:      texture.query().width,
@@ -383,7 +398,8 @@ impl<'a> Window<'a> {
             }
         });
 
-        let texture = try!(self.renderer.create_texture_from_surface(&surf));
+        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
+        texture.set_blend_mode(render::BlendMode::Blend);
         Ok(Font{
             texture:    texture,
             chars:      chars,
@@ -391,14 +407,15 @@ impl<'a> Window<'a> {
     }
 
     /// Load a Font from the hard drive. See the documentation on `Font` for details.
-    pub fn load_font(&self, filename: &Path, string: String) -> Result<Font, String> {
+    pub fn load_font_from_file(&self, filename: &Path, string: String) -> Result<Font, String> {
         let surf: surface::Surface = try!(LoadSurface::from_file(filename));
         self.create_font(surf, string)
     }
 
-    /// Load a Font from a slice of bytes in memory already. See the documentation on `Font` for
-    /// details.
-    pub fn load_font_from_memory(&self, data: &[u8], string: String) -> Result<Font, String> {
+    /// Load a Font from a slice of bytes. See the documentation on `Font` for details. This
+    /// function is particularly powerful when used in conjunction with the `include_bytes` macro
+    /// that embeds data in the compiled executable.
+    pub fn load_font_from_bytes(&self, data: &[u8], string: String) -> Result<Font, String> {
         let rwops = try!(rwops::RWops::from_bytes(data));
         let surf: surface::Surface = try!(rwops.load());
         self.create_font(surf, string)
