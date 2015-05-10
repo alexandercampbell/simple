@@ -9,7 +9,7 @@ extern crate simple;
 
 fn main() {
     let mut window = simple::Window::new("Los Angeles", 640, 480);
-    let mut pic = window.load_image_from_bytes(include_bytes!("city.jpg")).unwrap();
+    let mut pic = window.load_image(include_bytes!("city.jpg")).unwrap();
 
     let mut frame_number:u64 = 0;
 

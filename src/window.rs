@@ -93,7 +93,7 @@ impl<'a> Window<'a> {
         };
 
         // load the default font
-        let font = window.load_font_from_bytes(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
+        let font = window.load_font(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
         window.font = Some(font);
 
         window.clear();
@@ -294,11 +294,11 @@ impl Image {
 /**
  * Font is a way to render text, loaded from a specially formatted image.
  *
- * Note that Font is not loaded from a TrueType file. Loading from an image is a little faster and
- * a little simpler and a little more portable, but has a couple disadvantages. For one, the size
- * is fixed by the file. To have two different font sizes, you have to create two different Fonts
- * from two different files. Another disadvantage is that these special ImageFonts are less widely
- * available.
+ * Note that Font is not loaded from a TrueType file, but instead, from a specially formatted
+ * image. Loading from an image is a little faster and a little simpler and a little more portable,
+ * but has a couple disadvantages. For one, the font size is fixed by the file. To have two
+ * different font sizes, you have to create two different Fonts from two different files. Another
+ * disadvantage is that these special images are less widely available.
  *
  * This link describes how ImageFonts work: https://love2d.org/wiki/Tutorial:Fonts_and_Text
  */
@@ -335,7 +335,7 @@ impl<'a> Window<'a> {
     /// Load an image from a slice of bytes. This function is particularly powerful when used in
     /// conjunction with the `include_bytes` macro that embeds data in the compiled executable. In
     /// this way, you can pack all of your game data into your executable.
-    pub fn load_image_from_bytes(&self, data: &[u8]) -> Result<Image, String> {
+    pub fn load_image(&self, data: &[u8]) -> Result<Image, String> {
         let rwops = try!(rwops::RWops::from_bytes(data));
         let surf: surface::Surface = try!(rwops.load());
         let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
@@ -350,7 +350,7 @@ impl<'a> Window<'a> {
     // TODO: Split this out so it can be tested.
 
     /// Parse a font from the Surface, using the string as a guideline.
-    fn create_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
+    fn parse_image_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
         let mut surf = surf;
         let mut chars: HashMap<char, shape::Rect> = HashMap::new();
 
@@ -409,19 +409,20 @@ impl<'a> Window<'a> {
     /// Load a Font from the hard drive. See the documentation on `Font` for details.
     pub fn load_font_from_file(&self, filename: &Path, string: String) -> Result<Font, String> {
         let surf: surface::Surface = try!(LoadSurface::from_file(filename));
-        self.create_font(surf, string)
+        self.parse_image_font(surf, string)
     }
 
     /// Load a Font from a slice of bytes. See the documentation on `Font` for details. This
     /// function is particularly powerful when used in conjunction with the `include_bytes` macro
     /// that embeds data in the compiled executable.
-    pub fn load_font_from_bytes(&self, data: &[u8], string: String) -> Result<Font, String> {
+    pub fn load_font(&self, data: &[u8], string: String) -> Result<Font, String> {
         let rwops = try!(rwops::RWops::from_bytes(data));
         let surf: surface::Surface = try!(rwops.load());
-        self.create_font(surf, string)
+        self.parse_image_font(surf, string)
     }
 }
 
+/// Utility method to set the texture's color and alpha mods to the Color.
 fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
     // configure the texture for drawing according to the current foreground_color
     let (r,g,b,a) = match *color {
