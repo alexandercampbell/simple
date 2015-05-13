@@ -93,13 +93,15 @@ impl<'a> Window<'a> {
             font:                       None,
         };
 
+        // clear first, then load the default font
+        window.clear();
+        window.renderer.drawer().present();
+        window.set_color(255, 255, 255, 255);
+
         // load the default font
         let font = window.load_font(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
         window.font = Some(font);
 
-        window.clear();
-        window.renderer.drawer().present();
-        window.set_color(255, 255, 255, 255);
         window
     }
 
