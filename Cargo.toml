@@ -15,10 +15,10 @@ path = "src/lib.rs"
 crate-type = ["static"]
 
 [dependencies]
-sdl2 = "*" # Surprise. It's actually an SDL2 wrapper.
-sdl2-sys = "*"
-libc = "*"
-rand = "*"
-sdl2_image = "*"
-num = "*"
+sdl2 = "0.2.1" # Surprise. It's actually an SDL2 wrapper.
+sdl2-sys = "0.2.1"
+sdl2_image = "0.2.1"
+libc = "0.1.8"
+rand = "0.3.8"
+num = "0.1.24"
 
