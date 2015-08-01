@@ -15,10 +15,13 @@ path = "src/lib.rs"
 crate-type = ["static"]
 
 [dependencies]
-sdl2 = "0.2.1" # Surprise. It's actually an SDL2 wrapper.
-sdl2-sys = "0.2.1"
-sdl2_image = "0.2.1"
+sdl2 = "0.6.1" # Surprise. It's actually an SDL2 wrapper.
+sdl2-sys = "0.6.1"
 libc = "0.1.8"
 rand = "0.3.8"
 num = "0.1.24"
+
+[dependencies.sdl2_image]
+git = "https://github.com/xsleonard/rust-sdl2_image"
+version = "0.2.4"
 
