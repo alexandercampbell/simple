@@ -9,8 +9,8 @@ use rand::random;
 extern crate simple;
 use simple::{Window,Event,Rect};
 
-static WIDTH:u16 = 1280;
-static HEIGHT:u16 = 720;
+static SCREEN_WIDTH:u16 = 1280;
+static SCREEN_HEIGHT:u16 = 720;
 
 /// Return an f32 in the interval [0, upper_bound]
 /// Used to generate random positions for Square.
@@ -46,32 +46,32 @@ impl Square {
     }
 
     /// Generate a totally random new Square
-    fn new() -> Self { Square::new_at_position(rand_up_to(WIDTH as f32), rand_up_to(HEIGHT as f32)) }
+    fn new() -> Self { Square::new_at_position(rand_up_to(SCREEN_WIDTH as f32), rand_up_to(SCREEN_HEIGHT as f32)) }
 
     /// Move the Square the distance it needs to travel for one frame.
     fn update(&mut self) {
         self.x += self.speed_x;
         self.y += self.speed_y;
 
-        if self.x < 0.0 || self.x > WIDTH as f32   { self.speed_x *= -1f32; }
-        if self.y < 0.0 || self.y > HEIGHT as f32  { self.speed_y *= -1f32; }
+        if self.x < 0.0 || self.x > SCREEN_WIDTH as f32   { self.speed_x *= -1f32; }
+        if self.y < 0.0 || self.y > SCREEN_HEIGHT as f32  { self.speed_y *= -1f32; }
     }
 
     /// Blit a square representing this object onto the Window.
     fn draw(&self, app: &mut Window) {
         app.set_color(self.color.0, self.color.1, self.color.2, self.color.3);
-        app.fill_rect(Rect{
-            x: self.x as i32 - 32,
-            y: self.y as i32 - 32,
-            w: 64,
-            h: 64,
-        });
+        app.fill_rect(Rect::new_unwrap(
+            self.x as i32 - 32,
+            self.y as i32 - 32,
+            64,
+            64,
+        ));
     }
 }
 
 fn main() {
     // Create an application
-    let mut app = Window::new("Squares", WIDTH, HEIGHT);
+    let mut app = Window::new("Squares", SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // Create some objects to live in the application
     let mut squares = vec![

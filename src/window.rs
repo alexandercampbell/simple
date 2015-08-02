@@ -419,7 +419,7 @@ impl<'a> Window<'a> {
                         Some(_) => (),
                         None => {
                             current_rect = Some(
-                                shape::Rect::new_unwrap(i as i32, 0, 0, surf_height),
+                                shape::Rect::new_unwrap(i as i32, 0, 1, surf_height),
                             );
                         },
                     }
