@@ -1,7 +1,7 @@
 
 extern crate sdl2;
 use sdl2::event::Event as SDL_Event;
-pub use sdl2::scancode::ScanCode as Key;
+pub use sdl2::keyboard::Scancode as Key;
 pub use sdl2::mouse::Mouse as MouseButton;
 
 /**
@@ -35,8 +35,10 @@ impl Event {
             SDL_Event::Quit{..} => Some(Event::Quit),
 
             // Keyboard
-            SDL_Event::KeyDown{scancode: key, ..}  => Some(Event::Keyboard{is_down: true, key: key}),
-            SDL_Event::KeyUp{scancode: key, ..}    => Some(Event::Keyboard{is_down: false, key: key}),
+            SDL_Event::KeyDown{scancode: Some(key), ..} =>
+                Some(Event::Keyboard{is_down: true, key: key}),
+            SDL_Event::KeyUp{scancode: Some(key), ..} =>
+                Some(Event::Keyboard{is_down: false, key: key}),
 
             // Mouse
             SDL_Event::MouseButtonDown{mouse_btn: button, x, y, ..} =>
@@ -59,24 +61,3 @@ fn test_from_sdl2_event() {
 
     // TODO: Test more comprehensively.
 }
-
-/// Convert from an sdl2::mouse::Mouse enum into an sdl2::mouse::MouseState bitflag.
-pub fn mousebutton_to_mousestate(button: MouseButton) -> Option<sdl2::mouse::MouseState> {
-    Some(match button {
-        MouseButton::Left => sdl2::mouse::LEFTMOUSESTATE,
-        MouseButton::Right => sdl2::mouse::RIGHTMOUSESTATE,
-        MouseButton::Middle => sdl2::mouse::MIDDLEMOUSESTATE,
-        MouseButton::X1 => sdl2::mouse::X1MOUSESTATE,
-        MouseButton::X2 => sdl2::mouse::X2MOUSESTATE,
-        _ => return None,
-    })
-}
-
-#[test]
-fn test_mousebutton_to_mousestate() {
-    assert!(mousebutton_to_mousestate(MouseButton::Left) == Some(sdl2::mouse::LEFTMOUSESTATE));
-    assert!(mousebutton_to_mousestate(MouseButton::X1) == Some(sdl2::mouse::X1MOUSESTATE));
-    assert!(mousebutton_to_mousestate(MouseButton::X2) == Some(sdl2::mouse::X2MOUSESTATE));
-    assert!(mousebutton_to_mousestate(MouseButton::Unknown(5)) == None);
-}
-

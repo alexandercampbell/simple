@@ -29,7 +29,7 @@ use util;
  */
 pub struct Window<'a> {
     // sdl graphics
-    context:                    sdl2::sdl::Sdl,
+    context:                    sdl2::Sdl,
     renderer:                   render::Renderer<'a>,
     foreground_color:           pixels::Color,
     font:                       Option<Font>,
@@ -62,25 +62,27 @@ impl<'a> Window<'a> {
         //
         // TODO: solve this problem
         //
-        let sdl_context = sdl2::init(sdl2::INIT_EVERYTHING).unwrap();
+        let sdl_context = sdl2::init().unwrap();
         sdl2_image::init(sdl2_image::InitFlag::all());
-        let sdl_window = video::Window::new(
+        let sdl_window_builder = video::WindowBuilder::new(
             &sdl_context,
             name,
-            video::WindowPos::PosUndefined,
-            video::WindowPos::PosUndefined,
-            width as i32, height as i32,
-            video::SHOWN,
-        ).unwrap();
+            width as u32, height as u32,
+        );
 
-        let mut renderer = render::Renderer::from_window(
+        let sdl_window = sdl_window_builder.build().unwrap();
+
+        let mut renderer = sdl_window.renderer().build().unwrap();
+        /*
+            render::Renderer::from_window(
             sdl_window,
             render::RenderDriverIndex::Auto,
             render::ACCELERATED,
         ).unwrap();
+        */
 
         // for transparency
-        renderer.drawer().set_blend_mode(render::BlendMode::Blend);
+        renderer.set_blend_mode(render::BlendMode::Blend);
 
         let mut window = Window{
             context:                    sdl_context,
@@ -95,7 +97,7 @@ impl<'a> Window<'a> {
 
         // clear first, then load the default font
         window.clear();
-        window.renderer.drawer().present();
+        window.renderer.present();
         window.set_color(255, 255, 255, 255);
 
         // load the default font
@@ -115,7 +117,7 @@ impl<'a> Window<'a> {
             return false;
         }
 
-        self.renderer.drawer().present();
+        self.renderer.present();
 
         let mut current_ticks = sdl2::timer::get_ticks();
         while current_ticks - self.ticks_at_previous_frame < self.target_ticks_per_frame {
@@ -157,23 +159,14 @@ impl<'a> Window<'a> {
     /// Return true if the button is currently pressed. NOTE: This function is probably not
     /// performant.
     pub fn is_key_down(&self, key: event::Key) -> bool {
-        // TODO: this has got to be slow but I can't figure out a way to get the state of
-        // individual keys from sdl2-rs.
-        let state = sdl2::keyboard::get_keyboard_state();
-        match state.get(&key) {
-            Some(ref b) if **b => true,
-            _ => false,
-        }
+        self.context.keyboard_state().is_scancode_pressed(key)
     }
 
     /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
     /// and will always return `false`.
     pub fn is_mouse_button_down(&self, button: event::MouseButton) -> bool {
-        let flags = sdl2::mouse::get_mouse_state().0;
-        match event::mousebutton_to_mousestate(button) {
-            Some(state) => flags.contains(state),
-            None => false,
-        }
+        let mouse_state = sdl2::mouse::get_mouse_state().0;
+        mouse_state.button(button)
     }
 
     /// Return the current position of the mouse, relative to the top-left corner of the Window.
@@ -205,25 +198,25 @@ impl<'a> Window<'a> {
 
     /// Set up the color according to the internal state of the Window.
     fn prepare_to_draw(&mut self) {
-        self.renderer.drawer().set_draw_color(self.foreground_color);
+        self.renderer.set_draw_color(self.foreground_color);
     }
 
-    // These functions are just aliases onto self.renderer.drawer() as you can see.
+    // These functions are just aliases onto self.renderer.as you can see.
     pub fn draw_rect(&mut self, rect: shape::Rect)     {
         self.prepare_to_draw();
-        self.renderer.drawer().draw_rect(rect)
+        self.renderer.draw_rect(rect)
     }
     pub fn fill_rect(&mut self, rect: shape::Rect)     {
         self.prepare_to_draw();
-        self.renderer.drawer().fill_rect(rect)
+        self.renderer.fill_rect(rect)
     }
     pub fn draw_point(&mut self, point: shape::Point)  {
         self.prepare_to_draw();
-        self.renderer.drawer().draw_point(point)
+        self.renderer.draw_point(point)
     }
     pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
         self.prepare_to_draw();
-        self.renderer.drawer().draw_points(&polygon[..])
+        self.renderer.draw_points(&polygon[..])
     }
 
     /// Display the image with its top-left corner at (x, y)
@@ -232,12 +225,9 @@ impl<'a> Window<'a> {
         util::set_texture_color(&self.foreground_color, &mut image.texture);
 
         // copy the texture onto the drawer()
-        self.renderer.drawer().copy(&(image.texture), Some(shape::Rect{
-            x: x,
-            y: y,
-            w: image.get_width(),
-            h: image.get_height(),
-        }), None);
+        self.renderer.copy(&(image.texture), Some(shape::Rect::new_unwrap(
+            x, y, image.get_width() as u32, image.get_height() as u32,
+        )), None);
     }
 
     /// Write the text to the screen at (x, y) using the currently set font on the Window. Return a
@@ -266,34 +256,25 @@ impl<'a> Window<'a> {
                 Some(r) => r,
             };
 
-            self.renderer.drawer().copy(&(font.texture), Some(*font_rect), Some(shape::Rect{
-                x: current_x,
-                y: y,
-                w: font_rect.w,
-                h: font_rect.h,
-            }));
+            let rect = shape::Rect::new(current_x, y, font_rect.width(), font_rect.height()).unwrap();
+            self.renderer.copy(&(font.texture), Some(*font_rect), rect);
 
-            current_x += font_rect.w;
+            current_x += font_rect.width() as i32;
         }
 
-        shape::Rect{
-            x: x,
-            y: y,
-            w: current_x - x,
-            h: font.get_height(),
-        }
+        shape::Rect::new_unwrap(x, y, (current_x - x) as u32, font.get_height() as u32)
     }
 
     /// Clear the screen to black. Does not affect the current rendering color.
     pub fn clear(&mut self) {
-        self.renderer.drawer().set_draw_color(pixels::Color::RGB(0, 0, 0));
-        self.renderer.drawer().clear();
+        self.renderer.set_draw_color(pixels::Color::RGB(0, 0, 0));
+        self.renderer.clear();
     }
 
     /// Clear the screen to the color you specify.
     pub fn clear_to_color(&mut self, r: u8, g: u8, b: u8) {
-        self.renderer.drawer().set_draw_color(pixels::Color::RGB(r, g, b));
-        self.renderer.drawer().clear();
+        self.renderer.set_draw_color(pixels::Color::RGB(r, g, b));
+        self.renderer.clear();
     }
 }
 
@@ -304,13 +285,13 @@ impl<'a> Window<'a> {
  */
 pub struct Image {
     texture:    render::Texture,
-    width:      i32,
-    height:     i32,
+    width:      u32,
+    height:     u32,
 }
 
 impl Image {
-    pub fn get_width(&self) -> i32  { self.width }
-    pub fn get_height(&self) -> i32 { self.height }
+    pub fn get_width(&self) -> u32  { self.width }
+    pub fn get_height(&self) -> u32 { self.height }
 }
 
 /**
@@ -327,7 +308,7 @@ impl Image {
 pub struct Font {
     texture:    render::Texture,
     chars:      HashMap<char, shape::Rect>,
-    height:     i32,
+    height:     u32,
 }
 
 impl Font {
@@ -344,7 +325,7 @@ impl Font {
     /// Return the height of the Font. This is constant for every possible character, while the
     /// individual character widths vary. Note that certain characters (such a single quote `'`)
     /// might not actually take up all of `height`. However, no character may exceed this limit.
-    pub fn get_height(&self) -> i32 {
+    pub fn get_height(&self) -> u32 {
         self.height
     }
 
@@ -397,7 +378,7 @@ impl<'a> Window<'a> {
             return Err("image font string has duplicate characters".to_string())
         }
 
-        let mut surf = surf;
+        let surf = surf;
         let mut chars: HashMap<char, shape::Rect> = HashMap::new();
 
         let surf_width = surf.get_width();
@@ -422,7 +403,12 @@ impl<'a> Window<'a> {
                                     return;
                                 }
                             };
-                            rect.w = (i as i32) - rect.x;
+                            rect = shape::Rect::new_unwrap(
+                                rect.x(),
+                                rect.y(),
+                                ((i as i32) - rect.x()) as u32,
+                                rect.height(),
+                            );
                             chars.insert(c, rect.clone());
                             current_rect = None;
                         },
@@ -432,12 +418,9 @@ impl<'a> Window<'a> {
                     match current_rect {
                         Some(_) => (),
                         None => {
-                            current_rect = Some(shape::Rect{
-                                x: i as i32,
-                                y: 0,
-                                w: 0,
-                                h: surf_height,
-                            });
+                            current_rect = Some(
+                                shape::Rect::new_unwrap(i as i32, 0, 0, surf_height),
+                            );
                         },
                     }
                 }
