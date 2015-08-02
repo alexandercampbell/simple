@@ -37,7 +37,7 @@ Examples
 Check out the `examples/` directory for some mini-programs that use Simple.
 
 ```sh
-cargo run --example breakout
+cargo run --example font
 ```
 
 
