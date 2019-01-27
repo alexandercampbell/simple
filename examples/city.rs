@@ -2,16 +2,13 @@
  * This example demonstrates how to load an image and draw it onto the screen.
  */
 
-extern crate num;
-use num::Float;
-
 extern crate simple;
 
 fn main() {
     let mut window = simple::Window::new("Los Angeles", 640, 480);
     let mut pic = window.load_image(include_bytes!("city.jpg")).unwrap();
 
-    let mut frame_number:u64 = 0;
+    let mut frame_number: u64 = 0;
 
     while window.next_frame() {
         window.clear();
@@ -25,4 +22,3 @@ fn main() {
         frame_number += 1;
     }
 }
-

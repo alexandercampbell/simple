@@ -1,20 +1,17 @@
-
 use std;
-use std::path::Path;
 use std::collections::HashMap;
+use std::path::Path;
 
 extern crate sdl2;
-extern crate sdl2_image;
-use sdl2::render;
-use sdl2::video;
+use sdl2::image::ImageRWops;
+use sdl2::image::LoadSurface;
+use sdl2::image::LoadTexture;
 use sdl2::pixels;
-use sdl2::surface;
+use sdl2::render;
 use sdl2::rwops;
-use sdl2_image::LoadTexture;
-use sdl2_image::LoadSurface;
-use sdl2_image::ImageRWops;
+use sdl2::surface;
 
-use event::{self,Event};
+use event::{self, Event};
 use shape;
 use util;
 
@@ -27,25 +24,26 @@ use util;
  * Creating multiple Windows is untested and will probably crash!
  *
  */
-pub struct Window<'a> {
+pub struct Window {
     // sdl graphics
-    context:                    sdl2::Sdl,
-    renderer:                   render::Renderer<'a>,
-    foreground_color:           pixels::Color,
-    font:                       Option<Font>,
+    event_pump: sdl2::EventPump,
+    timer_subsystem: sdl2::TimerSubsystem,
+    canvas: sdl2::render::Canvas<sdl2::video::Window>,
+    foreground_color: pixels::Color,
+    font: Option<Font>,
 
     // events and event logic
-    running:                    bool,
-    event_queue:                std::vec::Vec<Event>,
+    running: bool,
+    event_queue: std::vec::Vec<Event>,
 
     // timing
-    target_ticks_per_frame:     u32,
-    ticks_at_previous_frame:    u32,
+    target_ticks_per_frame: u32,
+    ticks_at_previous_frame: u32,
 }
 
 /// Top-level Running / Creation Methods
 /// ====================================
-impl<'a> Window<'a> {
+impl Window {
     /// Intialize a new running window. `name` is used as a caption.
     pub fn new(name: &str, width: u16, height: u16) -> Self {
         // SDL2 Initialization calls. This section here is the reason we can't easily create
@@ -63,45 +61,39 @@ impl<'a> Window<'a> {
         // TODO: solve this problem
         //
         let sdl_context = sdl2::init().unwrap();
-        sdl2_image::init(sdl2_image::InitFlag::all());
-        let sdl_window_builder = video::WindowBuilder::new(
-            &sdl_context,
-            name,
-            width as u32, height as u32,
-        );
+        let timer_subsystem = sdl_context.timer().unwrap();
+        sdl2::image::init(sdl2::image::InitFlag::all()).unwrap();
 
+        let video_subsystem = sdl_context.video().unwrap();
+        let event_pump = sdl_context.event_pump().unwrap();
+        let sdl_window_builder = video_subsystem.window(name, width as u32, height as u32);
         let sdl_window = sdl_window_builder.build().unwrap();
-
-        let mut renderer = sdl_window.renderer().build().unwrap();
-        /*
-            render::Renderer::from_window(
-            sdl_window,
-            render::RenderDriverIndex::Auto,
-            render::ACCELERATED,
-        ).unwrap();
-        */
+        let mut canvas = sdl_window.into_canvas().build().unwrap();
 
         // for transparency
-        renderer.set_blend_mode(render::BlendMode::Blend);
+        canvas.set_blend_mode(render::BlendMode::Blend);
 
-        let mut window = Window{
-            context:                    sdl_context,
-            renderer:                   renderer,
-            running:                    true,
-            event_queue:                vec![],
-            foreground_color:           pixels::Color::RGBA(0, 0, 0, 255),
-            target_ticks_per_frame:     (1000.0 / 60.0) as u32,
-            ticks_at_previous_frame:    0,
-            font:                       None,
+        let mut window = Window {
+            timer_subsystem: timer_subsystem,
+            event_pump: event_pump,
+            canvas: canvas,
+            running: true,
+            event_queue: vec![],
+            foreground_color: pixels::Color::RGBA(0, 0, 0, 255),
+            target_ticks_per_frame: (1000.0 / 60.0) as u32,
+            ticks_at_previous_frame: 0,
+            font: None,
         };
 
         // clear first, then load the default font
         window.clear();
-        window.renderer.present();
+        window.canvas.present();
         window.set_color(255, 255, 255, 255);
 
         // load the default font
-        let font = window.load_font(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string()).unwrap();
+        let font = window
+            .load_font(DEFAULT_FONT_BYTES, DEFAULT_FONT_STR.to_string())
+            .unwrap();
         window.font = Some(font);
 
         window
@@ -117,18 +109,18 @@ impl<'a> Window<'a> {
             return false;
         }
 
-        self.renderer.present();
+        self.canvas.present();
 
-        let mut current_ticks = sdl2::timer::get_ticks();
+        let mut current_ticks = self.timer_subsystem.ticks();
         while current_ticks - self.ticks_at_previous_frame < self.target_ticks_per_frame {
-            sdl2::timer::delay(5);
-            current_ticks = sdl2::timer::get_ticks();
+            self.timer_subsystem.delay(3);
+            current_ticks = self.timer_subsystem.ticks();
         }
         self.ticks_at_previous_frame = current_ticks;
 
         // Handle events
         loop {
-            let sdl_event = self.context.event_pump().poll_event();
+            let sdl_event = self.event_pump.poll_event();
             match sdl_event {
                 None => break,
                 Some(sdl_event) => match Event::from_sdl2_event(sdl_event) {
@@ -145,7 +137,9 @@ impl<'a> Window<'a> {
     }
 
     /// Return true when there is an event waiting in the queue for processing.
-    pub fn has_event(&self) -> bool { self.event_queue.len() > 0 }
+    pub fn has_event(&self) -> bool {
+        self.event_queue.len() > 0
+    }
 
     /// Get the next event from the queue. NOTE: If the event queue on the Window is empty, this
     /// function will panic. Call `has_event()` to find out if there is an event ready for
@@ -154,25 +148,27 @@ impl<'a> Window<'a> {
     /// Note that events are handled in a first-in-first-out order. If a user presses three keys 1,
     /// 2, 3 during a frame, then the next three calls to next_event will return 1, 2, 3 in the
     /// same order.
-    pub fn next_event(&mut self) -> Event { self.event_queue.remove(0) }
+    pub fn next_event(&mut self) -> Event {
+        self.event_queue.remove(0)
+    }
 
     /// Return true if the button is currently pressed. NOTE: This function is probably not
     /// performant.
     pub fn is_key_down(&self, key: event::Key) -> bool {
-        self.context.keyboard_state().is_scancode_pressed(key)
+        self.event_pump.keyboard_state().is_scancode_pressed(key)
     }
 
     /// Return true if the specified button is down. NOTE: Unknown mouse buttons are NOT handled
     /// and will always return `false`.
     pub fn is_mouse_button_down(&self, button: event::MouseButton) -> bool {
-        let mouse_state = sdl2::mouse::get_mouse_state().0;
-        mouse_state.button(button)
+        let mouse_state = self.event_pump.mouse_state();
+        mouse_state.is_mouse_button_pressed(button)
     }
 
     /// Return the current position of the mouse, relative to the top-left corner of the Window.
     pub fn mouse_position(&self) -> (i32, i32) {
-        let state = sdl2::mouse::get_mouse_state();
-        (state.1, state.2)
+        let mouse_state = self.event_pump.mouse_state();
+        (mouse_state.x(), mouse_state.y())
     }
 
     /// Use this Font for future calls to `print()`.
@@ -180,8 +176,8 @@ impl<'a> Window<'a> {
         self.font = Some(font)
     }
 
-    /// This does not actually cause the program to exit. It just means that next_frame will return
-    /// false on the next call.
+    /// This does not cause the program to exit immediately. It just means that next_frame
+    /// will return false on the next call.
     pub fn quit(&mut self) {
         self.running = false;
     }
@@ -189,7 +185,7 @@ impl<'a> Window<'a> {
 
 /// Drawing Methods
 /// ===============
-impl<'a> Window<'a> {
+impl Window {
     /// Windows have a color set on them at all times. This color is applied to every draw
     /// operation. To "unset" the color, call set_color with (255,255,255,255)
     pub fn set_color(&mut self, red: u8, green: u8, blue: u8, alpha: u8) {
@@ -198,25 +194,25 @@ impl<'a> Window<'a> {
 
     /// Set up the color according to the internal state of the Window.
     fn prepare_to_draw(&mut self) {
-        self.renderer.set_draw_color(self.foreground_color);
+        self.canvas.set_draw_color(self.foreground_color);
     }
 
-    // These functions are just aliases onto self.renderer.as you can see.
-    pub fn draw_rect(&mut self, rect: shape::Rect)     {
+    // These functions are just aliases onto self.canvas.as you can see.
+    pub fn draw_rect(&mut self, rect: shape::Rect) {
         self.prepare_to_draw();
-        self.renderer.draw_rect(rect)
+        self.canvas.draw_rect(rect).unwrap();
     }
-    pub fn fill_rect(&mut self, rect: shape::Rect)     {
+    pub fn fill_rect(&mut self, rect: shape::Rect) {
         self.prepare_to_draw();
-        self.renderer.fill_rect(rect)
+        self.canvas.fill_rect(rect).unwrap();
     }
-    pub fn draw_point(&mut self, point: shape::Point)  {
+    pub fn draw_point(&mut self, point: shape::Point) {
         self.prepare_to_draw();
-        self.renderer.draw_point(point)
+        self.canvas.draw_point(point).unwrap();
     }
     pub fn draw_polygon(&mut self, polygon: shape::Polygon) {
         self.prepare_to_draw();
-        self.renderer.draw_points(&polygon[..])
+        self.canvas.draw_points(&polygon[..]).unwrap();
     }
 
     /// Display the image with its top-left corner at (x, y)
@@ -225,9 +221,18 @@ impl<'a> Window<'a> {
         util::set_texture_color(&self.foreground_color, &mut image.texture);
 
         // copy the texture onto the drawer()
-        self.renderer.copy(&(image.texture), Some(shape::Rect::new_unwrap(
-            x, y, image.get_width() as u32, image.get_height() as u32,
-        )), None);
+        self.canvas
+            .copy(
+                &(image.texture),
+                Some(shape::Rect::new(
+                    x,
+                    y,
+                    image.get_width() as u32,
+                    image.get_height() as u32,
+                )),
+                None,
+            )
+            .unwrap();
     }
 
     /// Write the text to the screen at (x, y) using the currently set font on the Window. Return a
@@ -235,7 +240,7 @@ impl<'a> Window<'a> {
     // TODO: Implement print_rect that wraps text to fit inside of a Rectangle.
     pub fn print(&mut self, text: &str, x: i32, y: i32) -> shape::Rect {
         self.prepare_to_draw();
-        let mut font = match self.font {
+        let font = match self.font {
             Some(ref mut r) => r,
 
             // FIXME: shouldn't be possible to have no font, and the `font` field on Window should
@@ -252,29 +257,31 @@ impl<'a> Window<'a> {
                     // Our Font cannot represent the current character. Leave a little space.
                     current_x += 5;
                     continue;
-                },
+                }
                 Some(r) => r,
             };
 
-            let rect = shape::Rect::new(current_x, y, font_rect.width(), font_rect.height()).unwrap();
-            self.renderer.copy(&(font.texture), Some(*font_rect), rect);
+            let rect = shape::Rect::new(current_x, y, font_rect.width(), font_rect.height());
+            self.canvas
+                .copy(&(font.texture), Some(*font_rect), rect)
+                .unwrap();
 
             current_x += font_rect.width() as i32;
         }
 
-        shape::Rect::new_unwrap(x, y, (current_x - x) as u32, font.get_height() as u32)
+        shape::Rect::new(x, y, (current_x - x) as u32, font.get_height() as u32)
     }
 
     /// Clear the screen to black. Does not affect the current rendering color.
     pub fn clear(&mut self) {
-        self.renderer.set_draw_color(pixels::Color::RGB(0, 0, 0));
-        self.renderer.clear();
+        self.canvas.set_draw_color(pixels::Color::RGB(0, 0, 0));
+        self.canvas.clear();
     }
 
     /// Clear the screen to the color you specify.
     pub fn clear_to_color(&mut self, r: u8, g: u8, b: u8) {
-        self.renderer.set_draw_color(pixels::Color::RGB(r, g, b));
-        self.renderer.clear();
+        self.canvas.set_draw_color(pixels::Color::RGB(r, g, b));
+        self.canvas.clear();
     }
 }
 
@@ -284,14 +291,18 @@ impl<'a> Window<'a> {
  * Images are immutable, in the sense that they have no methods to modify their contents.
  */
 pub struct Image {
-    texture:    render::Texture,
-    width:      u32,
-    height:     u32,
+    texture: render::Texture,
+    width: u32,
+    height: u32,
 }
 
 impl Image {
-    pub fn get_width(&self) -> u32  { self.width }
-    pub fn get_height(&self) -> u32 { self.height }
+    pub fn get_width(&self) -> u32 {
+        self.width
+    }
+    pub fn get_height(&self) -> u32 {
+        self.height
+    }
 }
 
 /**
@@ -306,9 +317,9 @@ impl Image {
  * This link describes how ImageFonts work: https://love2d.org/wiki/Tutorial:Fonts_and_Text
  */
 pub struct Font {
-    texture:    render::Texture,
-    chars:      HashMap<char, shape::Rect>,
-    height:     u32,
+    texture: render::Texture,
+    chars: HashMap<char, shape::Rect>,
+    height: u32,
 }
 
 impl Font {
@@ -343,30 +354,37 @@ const DEFAULT_FONT_STR: &'static str =
 
 /// Resource Loading Methods
 /// ========================
-impl<'a> Window<'a> {
+impl Window {
     /// Load the image at the path you specify.
     pub fn load_image_from_file(&self, filename: &Path) -> Result<Image, String> {
-        let mut texture = try!(LoadTexture::load_texture(&(self.renderer), &filename));
+        let mut texture = try!(self.canvas.texture_creator().load_texture(&filename));
         texture.set_blend_mode(render::BlendMode::Blend);
-        Ok(Image{
-            width:      texture.query().width,
-            height:     texture.query().height,
-            texture:    texture,
+        Ok(Image {
+            width: texture.query().width,
+            height: texture.query().height,
+            texture: texture,
         })
     }
 
-    /// Load an image from a slice of bytes. This function is particularly powerful when used in
-    /// conjunction with the `include_bytes` macro that embeds data in the compiled executable. In
-    /// this way, you can pack all of your game data into your executable.
+    /// Load an image from a slice of bytes. This function is particularly powerful when
+    /// used in conjunction with the `include_bytes` macro that embeds data in the compiled
+    /// executable. In this way, you can pack all of your game data into your executable.
     pub fn load_image(&self, data: &[u8]) -> Result<Image, String> {
         let rwops = try!(rwops::RWops::from_bytes(data));
         let surf: surface::Surface = try!(rwops.load());
-        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
+        let mut texture = match self
+            .canvas
+            .texture_creator()
+            .create_texture_from_surface(&surf)
+        {
+            Ok(t) => t,
+            Err(e) => return Err(e.to_string()),
+        };
         texture.set_blend_mode(render::BlendMode::Blend);
-        Ok(Image{
-            width:      texture.query().width,
-            height:     texture.query().height,
-            texture:    texture,
+        Ok(Image {
+            width: texture.query().width,
+            height: texture.query().height,
+            texture: texture,
         })
     }
 
@@ -375,14 +393,14 @@ impl<'a> Window<'a> {
     /// Parse a font from the Surface, using the string as a guideline.
     fn parse_image_font(&self, surf: surface::Surface, string: String) -> Result<Font, String> {
         if util::string_has_duplicate_chars(string.clone()) {
-            return Err("image font string has duplicate characters".to_string())
+            return Err("image font string has duplicate characters".to_string());
         }
 
         let surf = surf;
         let mut chars: HashMap<char, shape::Rect> = HashMap::new();
 
-        let surf_width = surf.get_width();
-        let surf_height = surf.get_height();
+        let surf_width = surf.width();
+        let surf_height = surf.height();
         let mut current_rect: Option<shape::Rect> = None;
 
         surf.with_lock(|pixels| {
@@ -403,7 +421,7 @@ impl<'a> Window<'a> {
                                     return;
                                 }
                             };
-                            rect = shape::Rect::new_unwrap(
+                            rect = shape::Rect::new(
                                 rect.x(),
                                 rect.y(),
                                 ((i as i32) - rect.x()) as u32,
@@ -411,28 +429,33 @@ impl<'a> Window<'a> {
                             );
                             chars.insert(c, rect.clone());
                             current_rect = None;
-                        },
+                        }
                         None => (),
                     }
                 } else {
                     match current_rect {
                         Some(_) => (),
                         None => {
-                            current_rect = Some(
-                                shape::Rect::new_unwrap(i as i32, 0, 1, surf_height),
-                            );
-                        },
+                            current_rect = Some(shape::Rect::new(i as i32, 0, 1, surf_height));
+                        }
                     }
                 }
             }
         });
 
-        let mut texture = try!(self.renderer.create_texture_from_surface(&surf));
+        let mut texture = match self
+            .canvas
+            .texture_creator()
+            .create_texture_from_surface(&surf)
+        {
+            Ok(t) => t,
+            Err(e) => return Err(e.to_string()),
+        };
         texture.set_blend_mode(render::BlendMode::Blend);
-        Ok(Font{
-            height:     texture.query().height,
-            texture:    texture,
-            chars:      chars,
+        Ok(Font {
+            height: texture.query().height,
+            texture: texture,
+            chars: chars,
         })
     }
 
@@ -451,12 +474,3 @@ impl<'a> Window<'a> {
         self.parse_image_font(surf, string)
     }
 }
-
-// Dtor for Window.
-impl<'a> std::ops::Drop for Window<'a> {
-    /// Close the window and clean up resources.
-    fn drop(&mut self) {
-        sdl2_image::quit();
-    }
-}
-

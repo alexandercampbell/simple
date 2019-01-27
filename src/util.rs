@@ -5,8 +5,8 @@
 use std::collections::HashMap;
 
 extern crate sdl2;
-use sdl2::render;
 use sdl2::pixels;
+use sdl2::render;
 
 /// Return true if any of the characters in `s` appear anywhere else in `s`.
 pub fn string_has_duplicate_chars(s: String) -> bool {
@@ -32,18 +32,14 @@ fn dup_chars() {
 
     // real-world test case
     assert!(!string_has_duplicate_chars(
-    " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/():;%&`'*#=[]\""
-    .to_string()));
+        " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,!?-+/():;%&`'*#=[]\""
+            .to_string()
+    ));
 }
 
 /// Utility method to set the texture's color and alpha mods to the Color.
 pub fn set_texture_color(color: &pixels::Color, texture: &mut render::Texture) {
     // configure the texture for drawing according to the current foreground_color
-    let (r,g,b,a) = match *color {
-        pixels::Color::RGB(r, g, b) => (r,g,b,255),
-        pixels::Color::RGBA(r, g, b, a) => (r,g,b,a),
-    };
-    texture.set_color_mod(r, g, b);
-    texture.set_alpha_mod(a);
+    texture.set_color_mod(color.r, color.g, color.b);
+    texture.set_alpha_mod(color.a);
 }
-

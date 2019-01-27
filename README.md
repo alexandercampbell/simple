@@ -9,10 +9,11 @@ Rust. Simple was inspired by [LOVE2D](http://love2d.org). I wrote Simple because
 I liked the ease-of-use that LOVE2D provided but I wanted the advantage of a
 typed compiler (Rust).
 
-Simple is implemented as a layer on top of [AngryLawyer's
-Rust-SDL2](https://github.com/AngryLawyer/rust-sdl2); you need to have `sdl2`
-and `sdl2_image` installed as development packages on your system. Simple is NOT
-written for performance. Remember: **Simple is a prototyping tool!**
+Simple is a layer built on top of the
+[`sdl2`](https://github.com/Rust-SDL2/rust-sdl2) package. You will need some
+development C libraries. On MacOS, you can use [Brew](https://brew.sh/) to
+install them with `brew install sdl2`. On Linux, look for a `libsdl2-dev`
+package in your package manager.
 
 Hello World
 -----------

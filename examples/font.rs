@@ -17,6 +17,5 @@ fn main() {
 
         app.set_color(0, 255, 255, 255);
         app.print("16777216 possible rendering colors!", 32, 128);
-    };
+    }
 }
-
