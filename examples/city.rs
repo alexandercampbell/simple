@@ -2,9 +2,6 @@
  * This example demonstrates how to load an image and draw it onto the screen.
  */
 
-extern crate num;
-use num::Float;
-
 extern crate simple;
 
 fn main() {

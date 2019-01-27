@@ -71,12 +71,7 @@ impl Square {
     /// Blit a square representing this object onto the Window.
     fn draw(&self, app: &mut Window) {
         app.set_color(self.color.0, self.color.1, self.color.2, self.color.3);
-        app.fill_rect(Rect::new_unwrap(
-            self.x as i32 - 32,
-            self.y as i32 - 32,
-            64,
-            64,
-        ));
+        app.fill_rect(Rect::new(self.x as i32 - 32, self.y as i32 - 32, 64, 64));
     }
 }
 
